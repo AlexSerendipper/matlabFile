@@ -1,0 +1,189 @@
+% Vibration Measurement Based on the Local Maximum Detection Algorithm for Laser Self-Mixing Interferometry,2020,IEEE
+% Self-mixing interference displacement measurement under very weak feedback regime based on integral reconstruction method,2019,Optics Communications
+
+%% global variance_1
+T = 20e-3; %simulation time 
+N = 3000; %numble of samples
+t= 0:T/N:T-T/N; %根据采样点数，确定采样时间及间隔（T=1，N=10为例，以0.1为步进，保证t中个数与N相等）
+lambda = 650e-9;
+%---构筑外部简谐振动------------------
+A = 2.25e-6;
+L0 = 0.9;
+f = 200;
+Lt = L0 + A.*sin(2*pi*f*t); %L0为标称位置，外腔长度
+%---global variance_2-----------------
+C = 2;
+alpha = 4.6;
+beta = 1; %the amplitude of selfmixing signal
+phi0 = 4*pi*Lt/lambda;
+
+
+%% main function1 ,creat self mixing power
+p = zeros(1,N);
+for i = 1:N 
+    p(i) = beta * cos(solve_phiF(C,phi0(i),alpha)); %遍历所有的phi0
+end
+subplot(6,1,1);
+plot(t,Lt);
+title("外部简谐振动");
+subplot(6,1,2);
+plot(t,p);
+title("自混合信号");
+hold on;
+
+%% main function2, find local peaks（top3,location3）
+[top3,location3] = findpeaks(p);
+location3_convert = N2T(location3,N,T); 
+scatter(location3_convert,top3);
+
+%% main function3(envelop)
+subplot(6,1,3);
+diffp = diff(p); %这两玩意求导后数量比N少一个,补一个,diff是相邻两个数的差分，补第一个
+diffp = [diffp(1),diffp];
+diff_acosp = diff(acos(p));
+diff_acosp = [diff_acosp(1),diff_acosp];;
+plot(t,diffp,'b');
+hold on;
+[top1,location1] = findpeaks(diffp); %拿到极大值和索引值
+[top2,location2] = findpeaks(-diffp); %拿到极小值和索引值
+location1 = N2T(location1,N,T); %转换为时域       
+location2 = N2T(location2,N,T);
+en_top = interp1(location1,top1,t,'spline'); %三次样条插值，曲线更平滑
+en_bottom = interp1(location2,-top2,t,'spline');
+plot(t,en_top,"r"); %画包络线
+hold on;
+plot(t,en_bottom,"g");
+envelop_median = (en_top - (en_top - en_bottom)/2);
+plot(t,envelop_median,"k");
+hold on;
+direction = -sign(envelop_median);
+plot(t,direction);
+title("diffp及其包络确定条纹方向");
+
+%% main function3(correct_direction_fringe_counting) ——难点2：这个符号函数有N个点，要矫正方向，难点在于把location3中其余点按顺序补成NaN才能和sign相乘         
+                                                               %难点1(首先处理)：sign函数跳变点在小数上，需要拓宽跳变点,要先拓宽跳变点后再乘，可以去除自混合跳变点                                                              
+subplot(6,1,4);
+for i = N:-1:2 %实现拓宽跳变点,从右往左遇到跳变点设为nan（难点1）   
+    if direction(i) ~= direction(i-1)
+        direction(i) = nan;
+    end
+end
+for i = 1:N-1 %从左往左再次拓宽跳变点，增加鲁棒性，拓宽的范围与N的取值密切相关，如果拓宽过大可能会丢失条纹，目前设置来看拓宽10在N=2000有效，20在N=4000有效。
+    if isnan(direction(i)) == 1
+        direction(i-1:-1:i-10*N/2000) = nan;
+    end
+end
+for i = N:-1:2 %从右往左再次拓宽跳变点，增加鲁棒性
+    if isnan(direction(i)) == 1
+        direction(i+1:i+10*N/2000) = nan;
+    end
+end
+
+plot(t,direction);
+location3_insert = zeros(1,N)*nan;
+top3_insert = zeros(1,N)*nan;
+for i = 1:length(location3) %实现补全nan（难点2）
+    a = location3(i);
+    top3_insert(a) = top3(i);
+    location3_insert(a) = a;
+end
+location3_convert = N2T(location3_insert,N,T); 
+top3_convert = direction .* top3_insert;
+stem(location3_convert,top3_convert);
+hold on;
+title("条纹数量及方向");
+
+%% reconstruction(integral)                                难点1：如何积分出N个值呢,trapze必须N个值对应N个数据才能求数值积分
+subplot(6,1,5);
+diff_phi0 = sqrt(diffp.^2./(1 - p.^2));   
+phi0_reconstruct =[];
+
+for i = 1:N-1
+    phi0_reconstruct = [phi0_reconstruct,trapz([t(1:i+1)],[diff_phi0(1:i+1)])];
+end
+phi0_reconstruct = [0,phi0_reconstruct];
+phi0_reconstruct = phi0_reconstruct .* direction;
+Lt = lambda.* phi0_reconstruct./(4*pi);
+plot(Lt);
+
+
+
+% phi0_reconstruct = zeros(1,N);
+% phi0_reconstruct = trapz(diff_phi0);
+% phi0_reconstruct = integral(diff_phi0);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+%% subfunction 1（selfmixing-power）
+function phiF = solve_phiF(C,phi0,alpha) %求解出每一个phi0对应的phiF
+    if C<=1 %每个phi0的解区间
+        [phiF_min, phiF_max] = bounds1(C,phi0);
+    else
+        [phiF_min, phiF_max] = bounds2(C,phi0,alpha);
+    end
+    
+    excessphaze_equation = @(phiF)phiF-phi0+C*sin(phiF+atan(alpha));
+    if (excessphaze_equation (phiF_min)>0) %文章的解释为,phiF_min值可能刚好比零点大一点点点，这时候取phiF_min为近似零点
+        phiF = phiF_min;
+    elseif (excessphaze_equation (phiF_max)<0)
+    	phiF = phiF_max;
+    else
+    	phiF = fzero(excessphaze_equation,[phiF_min,phiF_max]);
+    end  
+end
+%---C<1时的解区间函数------------------------------------------
+function [phiF_min, phiF_max] = bounds1(C,phi0) 
+    phiF_min = phi0-C;
+    phiF_max = phi0+C;
+end
+%---C>1时的解区间函数------------------------------------------
+function [phiF_min, phiF_max] = bounds2(C,phi0,alpha)
+persistent m; 
+if isempty (m); m = 0; end
+mlower = ceil ((phi0 + atan (alpha) + acos (1/C)- sqrt (C*C- 1))/(2*pi)- 1.5);
+mupper = floor ((phi0 + atan (alpha)- acos (1/C) + sqrt (C*C- 1))/(2*pi)- 0.5);
+if (m < mlower); m = mlower; end
+if (m > mupper); m = mupper; end
+phiF_min = (2*m+1)*pi + acos (1/C)- atan (alpha); 
+phiF_max = (2*m+3)* pi- acos (1/C)- atan (alpha); 
+end
+
+
+%% subfunction2(reconstruction)
+
+% 该函数实现，将N转换为对应的t，也就是从T=1，N=10这些简单的时候推出来N(i)与t的关系
+% 其中N为需要转换的点，N为采样点数，T为模拟时间
+function  temp = N2T(temp1,N,T)
+temp = zeros(1,length(temp1));    
+    for i = 1:length(temp1) 
+        temp(i) = T*(temp1(i)-1)/N;
+    end
+end
+
+
