@@ -43,7 +43,7 @@ function DRWA_API_4row1col(a,b,c,d)
     axis tight;
     ylabel('Displacement.(um)'); title('(d)', 'Units', 'normalized','FontSize', 16, 'Position', [0.035 0.7]); 
     set(gca,'YTickLabel',10^6*get(gca,'YTick'))  % 乘10^6，让图像的纵坐标显示的是微米量级
-    legend("real","OSPM(N=2)");
+    legend("REAL","OSPM(N=2)");
     
     % 第5幅图
     axes('Position',[0.06 0.1 0.401,0.232]);  

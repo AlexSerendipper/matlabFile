@@ -1,4 +1,4 @@
-function DRWA_API_4row1col(a,b,c,d)
+
     % 第1幅图
     axes('Position',[0.06,0.775,0.401,0.16]);  axis tight;  % 设置图像位置 + 坐标紧凑型
     
@@ -78,5 +78,5 @@ function DRWA_API_4row1col(a,b,c,d)
     ylabel('Error(nm)'); title('(h)', 'Units', 'normalized', 'FontSize', 16, 'Position', [0.035 0.7]);  % y轴注释 + 左上角角标，小标位置是相对当前图而言
     set(gca,'YTickLabel',10^9*get(gca,'YTick'))  % 乘10^9，让图像的纵坐标显示的是微米量级
     legend("OSPM(N=3)","OSPM(N=4)");
-end
+
 

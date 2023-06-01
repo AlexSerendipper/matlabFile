@@ -1,4 +1,4 @@
-function DRWA_API_4row1col(a,b,c,d)
+
     % 第1幅图
     axes('Position',[0.06,0.775,0.401,0.16]);  axis tight;  % 设置图像位置 + 坐标紧凑型
     
@@ -64,12 +64,12 @@ function DRWA_API_4row1col(a,b,c,d)
     hold on;
     load("D:\matlab save\self-mixing\smi_MODULATE\temp_experi._recon._times4.mat");
     plot(Lt_reconstruct_times4(100:13400),'Color','g');
-    legend("real","OSPM(N=3)","OSPM(N=4)");
+    legend("reference","OSPM(N=3)","OSPM(N=4)");
     ylabel('Displacement(um)'); title('(g)', 'Units', 'normalized', 'FontSize', 16, 'Position', [0.035 0.7]);  % y轴注释 + 左上角角标，小标位置是相对当前图而言
     set(gca,'YTickLabel',10^6*get(gca,'YTick'))  % 乘10^6，让图像的纵坐标显示的是微米量级
     
     % 第8幅图
-    axes('Position',[0.538 0.1 0.401 0.16]);  axis tight;  % 设置图像位置 + 坐标紧凑型 
+    axes('Position',[0.538 0.1 0.401 0.16]);  
     load("D:\matlab save\self-mixing\smi_MODULATE\temp_experi._recon._times1.mat");
 %   Lt_reconstruct_times2(4263:4890) = Lt_reconstruct_times2(1213:1213+627);
     plot(Lt_reconstruct1(100:13400)-Lt_reconstruct_times3(100:13400)); grid on;  % 作图 + 网格
@@ -78,5 +78,6 @@ function DRWA_API_4row1col(a,b,c,d)
     ylabel('Error(nm)'); title('(h)', 'Units', 'normalized', 'FontSize', 16, 'Position', [0.035 0.7]);  % y轴注释 + 左上角角标，小标位置是相对当前图而言
     set(gca,'YTickLabel',10^9*get(gca,'YTick'))  % 乘10^9，让图像的纵坐标显示的是微米量级
     legend("OSPM(N=3)","OSPM(N=4)");
-end
+    axis tight;  % 设置图像位置 + 坐标紧凑型 
+
 

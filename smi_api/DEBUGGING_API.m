@@ -1,43 +1,21 @@
 %% 该程序用于调试，其实也是非常好用且重要的
 
-
-%% 全局变量
-clc;
-clear all;
-close all;
-fs = 200000;  % 采样率，即fs(s)采一个点。
-N = 4000;  
-fv = 200;  % 震动频
-alpha = 5;
-
 %% 产生自混合信号
-figure(1);
 subplot(7,1,1);
-t = (0:N-1)/fs;  % 采样时间，设N=10, fs=200，即采样了0.05s，t为[0...0.045]
-lambda = 650e-9;  % 波长
-A = 2 * lambda;  % 幅值（✔）
-L0 = 20 * lambda;  % 外腔距离（✔） 
-Lt = A.* sin(2*pi*fv*t);  % L0为标称位置，外腔长度
-beta = 1;  % the amplitude of selfmixing signal
-phi0 = 4*pi*(L0+Lt)/lambda;
-
-p = zeros(1,N);
-C = [2, 2];
- % C的变化是一个正弦曲线，不能随机数！
-C_lower = C(1);
-C_upper = C(2);
-% 这个乘和加保证了c的上下限，这里可以设置变换的周期！！但是这个变换周期需要长一点否则会报错！！
-x = linspace(0, 3*pi, N);
-c = (C_upper-C_lower)/2 * cos(x) + (C_upper - (C_upper-C_lower)/2);
-% plot(x,c);
-
-for i = 1:N 
-    C = c(i);
-    p(i) = beta * cos(solve_phiF(C, phi0(i), alpha));  % 遍历所有的phi0
-end
-% p = awgn(p,10);  % 10db，加高斯噪声
-% p = p .* (1+0.2*cos(2*pi*75*t));  % 给自混合信号加包络，加了一个幅值为0.2，频率为75的包络
+fs = 200000; % 采样率
+N = 4000;  % 采样点
+fv = 100;  % 震动频率
+C = [1, 1]; 
+c=C(1);
+alpha = 4;
+[t, lambda, L0, Lt, phi0, p] = MOVE_API_HARMONIC(fs, N, fv, C, alpha);  % 1 简谐振动的自混合信号
+% [t, lambda, L0, Lt, phi0, p] = MOVE_API_COS(fs, N, C, alpha);  % 2 余弦调制信号的自混合信号
+% cut = 200;  % cut降采样，输入一个能被N整除的数，将N分为N/cut段  % 3
+% [t, lambda, L0, Lt, phi0, p] = MOVE_API_ALEATORY(fs, N, cut, C, alpha);  % 3 产生随机振动时，方向×负
+% [t, lambda, L0, Lt, phi0, p] = MOVE_API_ALEATORY_LOAD(fs, N, C, alpha);  % 4 加载储存好的随机振动，方向×负
 plot(p);
+% p = awgn(p,40);  % 10db，加高斯白噪声
+% p = p .* (1+0.2*cos(2*pi*75*t));  % 给自混合信号加包络，加了一个幅值为0.2，频率为75的包络
 hold on;
 title("自混合信号")
 
@@ -177,7 +155,33 @@ scatter(loc_r,top_r);
 plot(direction);
 title("得到纯净的峰谷值和完全正确的方向")
  
-%% just for test 
+
+%% 重构：PUM transform
+figure(2);
+% [phiF_reconstruct,Lt_reconstruct] = SMI_API_RECON_PUM(p,loc_p,loc_v,direction,N,lambda,c,alpha);
+[phiF_wrapped,phiF_reconstruct,Lt_reconstruct] = SMI_API_RECON_HT(p,direction,N,lambda,1,1);
+
+%% 
+% subplot(5, 1, 1);
+% plot(phiF_wrapped);
+% hold on;
+% title("phiF_wrapped")
+
+subplot(5, 1, 2);
+plot(phiF_reconstruct)
+title("重构后的phiF");
+
+subplot(5, 1, 3);
+plot(Lt);
+hold on;
+plot(Lt_reconstruct,'r')
+title("重构后的信号");
+
+%% 误差分析
+subplot(5, 1, 4);
+plot(Lt-Lt_reconstruct)
+RMSE = sqrt(mean((Lt-Lt_reconstruct).^2));
+title(['绝对误差，RMSE=', num2str(RMSE)])
 
 
 

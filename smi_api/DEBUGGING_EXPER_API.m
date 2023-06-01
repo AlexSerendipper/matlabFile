@@ -7,7 +7,7 @@
 clc;
 clear all;
 close all;
-C = 0.2;
+C = 2;
 fs = 200000;  % 采样率，即fs(s)采一个点。
 N = 4000;  
 fv = 100;  % 震动频
@@ -20,14 +20,14 @@ alpha = 5;
 % path =  'D:\matlab save\smi_实验信号\L2_weak_sanban_2240481_2255480';  % 1 文件路径
 % M = 2240481; N = 15000;  [t, p, fs] = MOVE_API_EXPERIMENT(M, N, path);  % 1 加载.csv文件，从M点处开始取N个点
 % % load('xxx.mat');  % 2. 加载.mat文件
-% 
+% plot(p);
 % lambda = 650e-9;  % 波长
 % p = sgolayfilt(p,1,11);
 % p = sgolayfilt(p,2,21);
 % p = sgolayfilt(p,3,31);
 % 
 % % SMI_API_CORR_FILTER(p,smoothingfactor,threshold) 使用自相关能够有效去噪，但是在后续处理方向上反而不太好，可能是信号带散斑的原因
-% p = -1 + (p - min(p))/(max(p) - min(p)) * 2;  % 还是需要归一化一下，否则无法求acosp
+% % p = -1 + (p - min(p))/(max(p) - min(p)) * 2;  % 还是需要归一化一下，否则无法求acosp
 % plot(p);
 % hold on;
 
