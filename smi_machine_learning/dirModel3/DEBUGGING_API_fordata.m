@@ -1,16 +1,18 @@
 %% 获得降C后的自混合信号
 %% 若要根据降C后的数据作训练集，思路是根据方向得到方向变换的点，501、1501...
-%  若方向变换的点附近(70)有谷值，将那点替换成谷值，此时方向变换的点当作翻转点来用就好了
+%  若方向变换的点 附近(30)有峰谷值，记录为翻转点，并将那点从谷值中删除，
+%  此时就能得到完全正确的谷值(不包含翻转点)和翻转点
+
 
 clc;
 clear all;
 close all;
 %% 产生自混合信号
-C=1.8;
+C=0.;
 fs = 200000;  % 采样率，即1/fs(s)采一个点。
 N = 4000;  
-fv = 100;  % 震动频率
-alpha = 5;
+fv =  100;  % 震动频率
+alpha = 5.3;
 [t, lambda, L0, Lt, phi0, p, c] = MOVE_API_HARMONIC(fs, N, fv, C, alpha);  % 1 简谐振动的自混合信号
 p_init = p;
 
@@ -46,7 +48,7 @@ p = sgolayfilt(p,3,31);
 [top_p,loc_p] = findpeaks(p);  % 找到所有大于0.1的峰值,这是因为驼峰区乱七八糟（当然这只针对该实验信号）
 [top_v,loc_v] = findpeaks(-p);  % 默认。 'minpeakheight',0.1, 'minpeakdistance',50
 top_v = -top_v;
-
+loc_ov = loc_v;
 
 subplot(2,1,1)
 plot(p);
@@ -56,16 +58,76 @@ hold on;
 scatter(loc_p,top_p);
 scatter(loc_v,top_v);
 
-%% 方向变换的点附近有谷值
-for i = 1:length(direction_seg1)
-    for j = 1:length(loc_v)
-        if direction_seg1(i)>loc_v(j)-70  && direction_seg1(i)<loc_v(j)+70  % 附近有谷值
-             direction_seg1(i) = loc_v(j);
+%% 若方向变换的点 附近(30)有峰谷值，记录为翻转点，并将那点从谷值中删除
+% 当c<1.5时，使用附近30的策略，标记翻转点,如果附近30没有，就标记当前点为翻转点。     当c>=1.5时，将方向变换的点右侧第一个峰谷值标记为翻转点
+loc_r=[];
+loc_pv = sort([loc_p loc_v]);
+if(C<1.5)
+    for i = 1:length(direction_seg1)
+        flag = 0;
+        for j = 1:length(loc_v)
+            if direction_seg1(i)+30>loc_v(j) && direction_seg1(i)-30<loc_v(j)  % 方向变换的点附近有谷值
+                loc_r = [loc_r loc_v(j)]; 
+                flag = 1;
+                break;
+            end
+        end
+        for k = 1:length(loc_p)
+            if direction_seg1(i)>loc_p(k)-30  && direction_seg1(i)<loc_p(k)+30  % 方向变换的点附近有峰值
+                loc_r = [loc_r loc_p(k)];
+                flag = 1;
+                break;
+            end
+        end
+        % 如果附近30没有，就标记当前点为翻转点
+        if flag==0  % 方向变换的点附近有谷值
+           loc_r = [loc_r direction_seg1(i)];
+        end
+    end
+elseif(C>=1.5)
+    for i = 1:length(direction_seg1)
+       temp = direction_seg1(i);
+       while true  % 将方向变换的点右侧第一个峰谷值标记为翻转点     
+           temp = temp + 1;
+           if(ismember(temp,loc_pv))
+                loc_r = [loc_r temp];
+                break;
+           end
+       end
+    end
+end
+
+% 在谷值点中去除翻转点
+% 挖去谷值中的跳变点
+for i = 1:length(loc_v)
+    for j = 1:length(loc_r)
+        if loc_v(i) == loc_r(j)
+            loc_v(i) = nan;
+            top_v(i) = nan;
         end
     end
 end
-% 此时direction_seg1，即作为翻转点即可~~~
-loc_r = direction_seg1;
+loc_v(isnan(loc_v))=[]; 
+top_v(isnan(top_v))=[]; 
+
+% 根据求出的翻转点修正一下dir信息！
+dir = direction;
+direction = zeros(1,N);
+direction(1) = dir(1);
+k = 1;
+for i = 1:N
+    direction(i) = k;
+    if ismember(i, loc_r)
+        k = k * -1;
+    end
+end
+
+subplot(2,1,2)
+plot(p);
+hold on;
+plot(direction);
+scatter(loc_v,top_v);
+scatter(loc_r,0);
 
 %% 拿信号
 fringeData = [];
@@ -91,5 +153,5 @@ for i=2:length(loc_ov)
 end
 
 
-subplot(5, 1, 3);
-plot(fringeData(6,:))
+
+
