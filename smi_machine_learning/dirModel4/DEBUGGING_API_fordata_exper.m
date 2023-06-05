@@ -2,22 +2,29 @@ clc;
 clear all;
 close all;
 %% 产生自混合信号
-fs = 200000;  % 采样率，即fs(s)采一个点。
-N = 8000;  
-fv = 50;  % 震动频
-C = [0.5];  % C设置一个从a到b变化的值
-alpha = 5;
-[t, lambda, L0, Lt, phi0, p, c] = MOVE_API_HARMONIC(fs, N, fv, C, alpha);  % 1 简谐振动的自混合信号
+% fs = 200000;  % 采样率，即fs(s)采一个点。
+% N = 8000;  
+% fv = 50;  % 震动频
+% C = [0.5];  % C设置一个从a到b变化的值
+% alpha = 5;
+% [t, lambda, L0, Lt, phi0, p, c] = MOVE_API_HARMONIC(fs, N, fv, C, alpha);  % 1 简谐振动的自混合信号
+% subplot(6, 1, 1);
+% % p = p .* (1+0.2*cos(2*pi*75*t));  % 给自混合信号加包络，加了一个幅值为0.2，频率为75的包络
+% p = -1 + (p-min(p))/(max(p)-min(p))*2;
+% p = awgn(p,20); 
+% plot(p);
+% hold on;
+% [top_v,loc_v] = findpeaks(-p);  % 'minpeakdistance'
+% top_v = -top_v;
+% scatter(loc_v,top_v);
+% title("自混合信号");
+
+
+%% 实验信号
 subplot(6, 1, 1);
-% p = p .* (1+0.2*cos(2*pi*75*t));  % 给自混合信号加包络，加了一个幅值为0.2，频率为75的包络
-p = -1 + (p-min(p))/(max(p)-min(p))*2;
-p = awgn(p,20); 
+path =  'D:\matlab save\smi_实验信号\f(100)_A(3um).csv';  % 5 文件路径, M/N/win/w = 250515/16000/128/150
+M = 40000; N = 10000; lambda = 650e-9; [t, p, fs] = MOVE_API_EXPERIMENT(M, N, path);  % 5 从M点处取N个点
 plot(p);
-hold on;
-[top_v,loc_v] = findpeaks(-p);  % 'minpeakdistance'
-top_v = -top_v;
-scatter(loc_v,top_v);
-title("自混合信号");
 
 %% first step ,calculate the MPD
 subplot(6, 1, 2);
