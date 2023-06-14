@@ -4,8 +4,8 @@
 function  [fringeData] = SMI_API_FringeData(C,alpha)
     %% 产生自混合信号
     fs = 200000;  % 采样率，即fs(s)采一个点。
-    N = 8000;  
-    fv = 50;  % 震动频
+    N = 4000;  
+    fv = 100;  % 震动频
     % alpha = 5;
     [t, lambda, L0, Lt, phi0, p, c] = MOVE_API_HARMONIC(fs, N, fv, C, alpha);  % 1 简谐振动的自混合信号
     p_init = p;

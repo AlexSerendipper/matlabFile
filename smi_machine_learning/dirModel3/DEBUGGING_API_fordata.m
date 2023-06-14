@@ -8,11 +8,11 @@ clc;
 clear all;
 close all;
 %% 产生自混合信号
-C=0.;
+C=0.1;
 fs = 200000;  % 采样率，即1/fs(s)采一个点。
 N = 4000;  
 fv =  100;  % 震动频率
-alpha = 5.3;
+alpha = 4;
 [t, lambda, L0, Lt, phi0, p, c] = MOVE_API_HARMONIC(fs, N, fv, C, alpha);  % 1 简谐振动的自混合信号
 p_init = p;
 
