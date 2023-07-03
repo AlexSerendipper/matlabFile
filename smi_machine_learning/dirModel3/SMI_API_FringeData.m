@@ -141,7 +141,7 @@ function  [fringeData] = SMI_API_FringeData(C,alpha)
             dir = 0;
         end
         loc = p(loc_ov(i-1):loc_ov(i));
-        int_ = 30;
+        int_ = 30;  % 重采样
         loc_ = [SMI_API_RESAMPLE(loc,int_) dir];  % 方向作为最后一个点
         fringeData = [fringeData;loc_];
     end
