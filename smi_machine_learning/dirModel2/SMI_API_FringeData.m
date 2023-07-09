@@ -29,7 +29,7 @@ function  [fringeData] = SMI_API_FringeData(C)
             dir = 0;
         end
         loc = p(loc_ov(i-1):loc_ov(i));
-        int_ = 1000;
+        int_ = 30;
         loc_ = [SMI_API_RESAMPLE(loc,int_) dir];
         fringeData = [fringeData;loc_];
     end

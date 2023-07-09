@@ -1,6 +1,5 @@
 %% 实现运行一次，拿到一个C值下的所有条纹数据(以谷点为间隔)，及其对应方向
 %% 循环遍历该函数，即可实现得到数据集
-
 function  [fringeData] = SMI_API_FringeData(C,alpha)
     %% 产生自混合信号
     fs = 200000;  % 采样率，即fs(s)采一个点。
@@ -142,7 +141,7 @@ function  [fringeData] = SMI_API_FringeData(C,alpha)
             dir = 0;
         end
         loc = p(loc_ov(i-1):loc_ov(i));
-        int_ = 1000;
+        int_ = 30;  % 重采样
         loc_ = [SMI_API_RESAMPLE(loc,int_) dir];  % 方向作为最后一个点
         fringeData = [fringeData;loc_];
     end

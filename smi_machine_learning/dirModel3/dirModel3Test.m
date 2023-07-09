@@ -31,7 +31,7 @@ load("matlab2.mat")
 dir = zeros(1,N);
 loc_r = [];
 rect = [];
-int_ = 1000;  % 插值倍数(重采样放大倍数，默认为1000)
+int_ = 30;  % 插值倍数(重采样放大倍数，默认为1000)
 fs = int_;  % 因为原本采样率为1，放大后采样率就是int_
 for i = 2:length(loc_ov)
     N = loc_ov(i)-loc_ov(i-1);
@@ -39,6 +39,7 @@ for i = 2:length(loc_ov)
     p_ = interp1(1:int_:int_* N,p(loc_ov(i-1):loc_ov(i)-1),1:int_* N,'spline');
     % 再将信号降采样为原来的N倍，即 N * 1000 / N， 故最后信号长度为int_
     p_ = p_(1:(loc_ov(i)-loc_ov(i-1)):length(p_));
+    
     judge = DirModel2.predictFcn(p_);  % 基于神经网络判断的方向
     
     if(i==2)

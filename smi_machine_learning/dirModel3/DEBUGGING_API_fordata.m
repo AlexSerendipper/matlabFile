@@ -4,7 +4,7 @@ clc;
 clear all;
 close all;
 %% 产生自混合信号
-C=1.9;
+C=1.5;
 fs = 200000;  % 采样率，即1/fs(s)采一个点。
 N = 4000;  
 fv =  100;  % 震动频率
@@ -27,7 +27,7 @@ end
 %     [p] = SMI_API_ELIMINATE_DC2(p_init,direction,"time");
 %     [p1,p2] = SMI_API_evenlopEXTRACT_HT_PRO(p,N);
 %     p = p2;
-subplot(3,1,1)
+subplot(6,1,1)
 plot(p);
 
 %% 全局变量
@@ -48,7 +48,7 @@ p = sgolayfilt(p,3,31);
 top_v = -top_v;
 loc_ov = loc_v;
 
-subplot(3,1,2)
+subplot(6,1,2)
 plot(p);
 hold on;
 plot(direction);
@@ -120,7 +120,7 @@ for i = 1:N
     end
 end
 
-subplot(3,1,3)
+subplot(6,1,3)
 plot(p);
 hold on;
 plot(direction);
@@ -145,11 +145,15 @@ for i=2:length(loc_ov)
         dir = 0;
     end
     loc = p(loc_ov(i-1):loc_ov(i));
-    int_ = 1000;
+    int_ = 30;
     loc_ = [SMI_API_RESAMPLE(loc,int_) dir];  % 方向作为最后一个点
     fringeData = [fringeData;loc_];
 end
 
 
-
-
+subplot(6,1,4)
+plot(fringeData(3,:))
+subplot(6,1,5)
+plot(fringeData(4,:))
+subplot(6,1,6)
+plot(fringeData(5,:))
