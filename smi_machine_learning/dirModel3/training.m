@@ -34,10 +34,10 @@ y_test = Y (:,T(0.8*inputNum+1:end));
 % [y_train,ys_train] = mapminmax(Y_train,0,1);  % 把输出数据归一化到0-1之间，y_train为归一化后的数据，ys_train主要方便之后反归一化使用（方便看出原数据的变化）
 
 %% 构建神经网络
-net = feedforwardnet([10,10,10]);  
+net = feedforwardnet([30,20,10]);  
 net.trainParam.epochs = 1000;  % 训练次数为1000
 % net.trainParam.goal = 1e-5; % 训练目标误差小于1e-5时停止训练
-net.trainParam.max_fail = 13;  % 训练终止条件之一，默认值为6。即默认情况下会将样本随即分为3类：训练样本，确认样本和测试样本，当确认样本的误差曲线连续6次迭代不在下降。这时训练终止
+net.trainParam.max_fail = 30;  % 训练终止条件之一，默认值为6。即默认情况下会将样本随即分为3类：训练样本，确认样本和测试样本，当确认样本的误差曲线连续6次迭代不在下降。这时训练终止
 
 net.trainParam.lr = 0.1;  % 训练学习速率为0.1
 net.trainparam.show=1;  % 显示中间结果的周期
