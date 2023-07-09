@@ -43,9 +43,9 @@ for i = 2:length(loc_ov)
     p_ = p_(1:(loc_ov(i)-loc_ov(i-1)):length(p_));
     judge = DirModel2.predictFcn(p_);  % 基于神经网络判断的方向
     
-    if(i==2)
+    if(i==2)  % 第一段
         dir(1:loc_ov(i)) =  judge;
-    elseif(i==length(loc_ov))   
+    elseif(i==length(loc_ov))  % 最后一段
         dir(loc_ov(i-1):end) =  judge;
     else
         dir(loc_ov(i-1):loc_ov(i)) =  judge;

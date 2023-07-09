@@ -17,7 +17,7 @@ plot(p);
 % p = awgn(p,40);  % 10db，加高斯白噪声
 % p = p .* (1+0.2*cos(2*pi*75*t));  % 给自混合信号加包络，加了一个幅值为0.2，频率为75的包络
 hold on;
-title("自混合信号")
+title(['自混合信号，C=', num2str(c)]);
 
 %% 找到所有的峰谷值（包含跳变点）
 [top_p,loc_p] = findpeaks(p);
