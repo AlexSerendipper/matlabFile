@@ -20,7 +20,7 @@ function  [fringeData] = SMI_API_FringeData(C,alpha)
     
     %% （去直流）
     % dc1有效
-    [p] = SMI_API_ELIMINATE_DC1(p_init,direction,"time");
+    % [p] = SMI_API_ELIMINATE_DC1(p_init,direction,"time");
     %     [p] = SMI_API_ELIMINATE_DC2(p_init,direction,"time");
     %     [p1,p2] = SMI_API_evenlopEXTRACT_HT_PRO(p,N);
     %     p = p2;

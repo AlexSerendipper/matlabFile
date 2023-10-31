@@ -15,13 +15,12 @@ n = 3;
 
 %% 实验信号
 figure(1);
-subplot(9,1,1);
+subplot(5,1,1);
 
-% path =  'D:\matlab save\smi_实验信号\EOM\9v 10hz 2k 200k.csv'; 
-% path =  'D:\matlab save\smi_实验信号\EOM\11v 10hz 2k 200k.csv';  % 150000-50000,比较垃圾啊，不太行这个信号 
-% path =  'D:\matlab save\smi_实验信号\EOM\11v 40hz 4k 200k.csv';  % 312100-50000，这个还可以，看看有没有更好的
-path =  'D:\matlab save\smi_实验信号\EOM\9v 40hz 4k 200k.csv';  % 390000-50000，这是最好的目前
-M = 390000; N = 50000;  [t, p, fs] = MOVE_API_EXPERIMENT(M, N, path);  % 1 加载.csv文件，从M点处开始取N个点
+% path =  'D:\matlab save\smi_实验信号\EOM_HL\11v 10hz 2k 200k.csv';  % 150000-50000,比较垃圾啊，不太行这个信号 
+path =  'D:\matlab save\smi_实验信号\EOM_HL\11v 40hz 4k 200k.csv';  % 312100-50000，这个还可以，看看有没有更好的
+% path =  'D:\matlab save\smi_实验信号\EOM_HL\9v 40hz 4k 200k.csv';  % 390000-50000，这是最好的目前
+M = 312100; N = 50000;  [t, p, fs] = MOVE_API_EXPERIMENT(M, N, path);  % 1 加载.csv文件，从M点处开始取N个点
 % load('xxx.mat');  % 2. 加载.mat文件
 lambda = 650e-9;  % 波长
 % p = sgolayfilt(p,1,11);
@@ -35,7 +34,7 @@ hold on;
 
 %% 傅里叶变换看频谱
 figure(1);
-subplot(9,1,2);
+subplot(5,1,2);
 % w = hamming(N);
 f = fs / N * (0 : 1 : N-1);  % Fs/N就是这个频谱中的最小频率间隔！！！！！所以N越大，分辨率会越高
 p_ = fft(p);
@@ -52,12 +51,14 @@ title("平移后频域信号（未更改频域范围）");
 % pp_ = takeHarmonicComponent(p_,6000,8000);  % 这个范围还是不能太小嗷，6500-7500误差就变大了
 pp_ = takeHarmonicComponent(p_,25500,26500);
 % pp_ = takeHarmonicComponent(p_,25470,26480);
-subplot(9,1,3);
+
+
+subplot(5,1,3);
 amp2 = abs(pp_) * 2 / N ;
 plot(fshift,amp2);
 title("取出的一次谐波成分（更改了频域范围）");
 
-subplot(9,1,4);
+subplot(5,1,4);
 p1 = ifft(ifftshift(pp_));
 p1 = imag(p1);  % 呃。。。文章里一次谐波取的是虚部，这里为啥一次谐波取实部啊，所以这是sin
 plot(p1);
@@ -65,7 +66,8 @@ title("一次谐波时域信号")
 
 % pp_ = takeHarmonicComponent(p_,8000,10000);
 pp_ = takeHarmonicComponent(p_,26500,27500);
-subplot(9,1,5);
+% pp_ = takeHarmonicComponent(p_,26760,26246);
+subplot(5,1,5);
 p2 = ifft(ifftshift(pp_));
 p2 = real(p2);
 plot(p2);

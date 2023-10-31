@@ -1,7 +1,6 @@
 %% 主要想利用该方法解决两个问题，一个是拓展调制的C的范围（力图使调制能工作在C比较大的时候）
 %% 第二是解决了TFPM算法中无法判断方向的问题
-%% 调制+TFPM的东西，应该是和参数设置有关系，下一步是实现自动化（画图时根据T,F来画）。
-%% 第二步就是把降C的工作引入到其中。
+%% 这个文件并未引入降C工作
  
 %% 经过多次仿真，fs/fm需要为整数才能实现频谱的正常搬移，但是一定要注意搬移距离至少要大到有足够间隔
 %   如果频谱搬运正常，但是逆变换后的图像很乱，可能是窗长设置问题，窗长设置为整数比较好
@@ -17,47 +16,22 @@ fs = 100000;  % 采样率
 N = 8000;  
 fv = 30;  % 震动频
 alpha = 5;
-
+C = [1.2]; 
 h = 300; % 调制深度
 fm = 10000;  % 调制频率
 gamma = 0;  % 调制初相位
-
+beta = 1;
 windowLength = 500; % 窗长
 %% 产生自混合信号
 figure(1);
 subplot(5,1,1);
-t = (0:N-1)/fs;  % 采样时间，设N=10, fs=200，即采样了0.05s，t为[0...0.045]
-lambda = 650e-9;  % 波长
-% A = 15*97.5*10^-9;  % 幅值（✔）默认幅值为0.3*lambda
-A = 3*lambda;  % 这个振幅还不能设置那么小，否则时频谱看着有点怪
-L0 = 20 * lambda;  % 外腔距离（✔） 
-Lt = A.* sin(2*pi*fv*t);  % L0为标称位置，外腔长度
-beta = 1;  % the amplitude of selfmixing signal
-phi0 = 4*pi*(L0+Lt)/lambda;
-
-p = zeros(1,N);
-C = [1.2, 1.2]; % C的变化是一个正弦曲线，不能随机数！
-C_lower = C(1);
-C_upper = C(2);
-% 这个乘和加保证了c的上下限，这里可以设置变换的周期！！但是这个变换周期需要长一点否则会报错！！
-x = linspace(0, 3*pi, N);
-c = (C_upper-C_lower)/2 * cos(x) + (C_upper - (C_upper-C_lower)/2);
-% plot(x,c);
-
-for i = 1:N 
-    C = c(i);
-    phiF(i) = solve_phiF(C, phi0(i), alpha);
-    p(i) = beta * cos(solve_phiF(C, phi0(i), alpha));  % 遍历所有的phi0
-end
+[t, lambda, L0, Lt, phi0, phiF, p, c] = MOVE_API_HARMONIC(fs, N, fv, C, alpha);
 p_init = p;
 [p,h] = SMI_API_MODULATE(beta,phiF,h,fm,gamma,t);  % 调制深度/调制频率/调制信号初始相位
-% [phi0,h] = SMI_API_MODULATE2(phi0,300,80000,0,t);
-% for i = 1:N 
-%     C = c(i);
-%     p(i) = beta * cos(solve_phiF(C, phi0(i), alpha));  % 遍历所有的phi0
-% end
+
 % p = awgn(p,30);  % 10db，加高斯噪声
 % p = p .* (1+0.2*cos(2*pi*75*t));  % 给自混合信号加包络，加了一个幅值为0.2，频率为75的包络
+
 plot(p);
 hold on;
 title("自混合信号");
@@ -67,7 +41,6 @@ figure(1);
 subplot(5,1,2);
 % w = hamming(N);
 f = fs / N * (0 : 1 : N-1);  % Fs/N就是这个频谱中的最小频率间隔！！！！！所以N越大，分辨率会越高
-%----------------------------
 p_ = fft(p);
 % 平移频域信号
 fshift = (-N/2:N/2-1)*(fs/N);  % 平移后信号的频域范围
@@ -75,7 +48,7 @@ p_ = fftshift(p_);  % fftshift将零频分量移动到数组中心，重新排�
 % amp1 = abs(p_) * 2 / N ;
 amp1 = abs(p_);
 plot(amp1);
-title("平移后频域信号（未更改频域范围）");
+title("平移后频域信号（未更改频域范围）(可不画)");
 subplot(5,1,3);
 plot(fshift,amp1);
 title("平移后频域信号（更改频域范围）");
@@ -160,7 +133,6 @@ subplot(5,1,1);
 p1 = p1 ./ -besselj(1,2*h); 
 p2 = p2 ./ besselj(2,2*h);
 phiF_wrapped = atan(p1./p2);
-
 phiF_wrapped = - phiF_wrapped;
 
 plot(phiF_wrapped);

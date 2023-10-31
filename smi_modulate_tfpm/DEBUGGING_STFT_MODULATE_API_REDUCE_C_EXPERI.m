@@ -1,6 +1,8 @@
 %% 主要想利用该方法解决两个问题，一个是拓展调制的C的范围（力图使调制能工作在C比较大的时候）
 %% 第二是解决了TFPM算法中无法判断方向的问题
-%% 这个文件引入了降C工作,已经基本实现了所有功能
+%% 调制+TFPM的东西，应该是和参数设置有关系，下一步是实现自动化（画图时根据T,F来画）。
+%% 第二步就是把降C的工作引入到其中。
+%% 第三步就是去直流，现在好像就差 去直流了，引入就结束了！！！ 
 
 %% 经过多次仿真，fs/fm需要为整数才能实现频谱的正常搬移，但是一定要注意搬移距离至少要大到有足够间隔
 %   如果频谱搬运正常，但是逆变换后的图像很乱，可能是窗长设置问题，窗长设置为整数比较好
@@ -12,50 +14,94 @@
 clc;
 clear all;
 close all;
-fs = 100000;  % 采样率
-N = 8000;  
-fv = 30;  % 震动频
+% fs = 100000;  % 采样率
+% N = 8000;  
+% fv = 30;  % 震动频
 alpha = 5;
-dir = 1; % 方向
-C = [1.2]; 
-h = 300; % 调制深度
-fm = 10000;  % 调制频率
-gamma = 0;  % 调制初相位
-beta = 1;
-windowLength = 500; % 窗长
-%% 产生自混合信号
-figure(1);
-subplot(7,1,1);
-[t, lambda, L0, Lt, phi0, phiF, p, c] = MOVE_API_HARMONIC(fs, N, fv, C, alpha);
-p_init = p;
-[p,h] = SMI_API_MODULATE(beta,phiF,h,fm,gamma,t);  % 调制深度/调制频率/调制信号初始相位
+dir = -1; % 方向
+% 
+h = 200; % 调制深度
+fm = 4000;  % 调制频率
+% gamma = 0;  % 调制初相位
+% 
+% windowLength = 500; % 窗长
+% %% 产生自混合信号
+% figure(1);
+% subplot(7,1,1);
+% t = (0:N-1)/fs;  % 采样时间，设N=10, fs=200，即采样了0.05s，t为[0...0.045]
+% lambda = 650e-9;  % 波长
+% % A = 15*97.5*10^-9;  % 幅值（✔）默认幅值为0.3*lambda
+% A = 3*lambda;  % 这个振幅还不能设置那么小，否则时频谱看着有点怪
+% L0 = 20 * lambda;  % 外腔距离（✔） 
+% Lt = A.* sin(2*pi*fv*t);  % L0为标称位置，外腔长度
+% beta = 1;  % the amplitude of selfmixing signal
+% phi0 = 4*pi*(L0+Lt)/lambda;
+% 
+% p = zeros(1,N);
+% C = [1.5,1.5];
+%  % C的变化是一个正弦曲线，不能随机数！
+% C_lower = C(1);
+% C_upper = C(2);
+% % 这个乘和加保证了c的上下限，这里可以设置变换的周期！！但是这个变换周期需要长一点否则会报错！！
+% x = linspace(0, 3*pi, N);
+% c = (C_upper-C_lower)/2 * cos(x) + (C_upper - (C_upper-C_lower)/2);
+% % plot(x,c);
+% 
+% for i = 1:N 
+%     C = c(i);
+%     phiF(i) = solve_phiF(C, phi0(i), alpha);
+%     p(i) = beta * cos(solve_phiF(C, phi0(i), alpha));  % 遍历所有的phi0
+% end
+% p_init = p;
+% [p,h] = SMI_API_MODULATE(beta,phiF,h,fm,gamma,t);  % 调制深度/调制频率/调制信号初始相位
+% % [phi0,h] = SMI_API_MODULATE2(phi0,300,80000,0,t);
+% % for i = 1:N 
+% %     C = c(i);
+% %     p(i) = beta * cos(solve_phiF(C, phi0(i), alpha));  % 遍历所有的phi0
+% % end
+% % p = awgn(p,30);  % 10db，加高斯噪声
+% % p = p .* (1+0.2*cos(2*pi*75*t));  % 给自混合信号加包络，加了一个幅值为0.2，频率为75的包络
+% plot(p);
+% hold on;
+% title("自混合信号");
 
-% p = awgn(p,30);  % 10db，加高斯噪声
-% p = p .* (1+0.2*cos(2*pi*75*t));  % 给自混合信号加包络，加了一个幅值为0.2，频率为75的包络
-
+%% 实验信号
+path =  'D:\matlab save\smi_实验信号\EOM_HL\9v 40hz 4k 200k.csv';  % 390000-50000，这是最好的目前
+M = 390000; N = 50000;  [t, p, fs] = MOVE_API_EXPERIMENT(M, N, path);  % 1 加载.csv文件，从M点处开始取N个点
+fs = round(fs);
+% load('xxx.mat');  % 2. 加载.mat文件
+lambda = 650e-9;  % 波长
+subplot(5,1,1);
 plot(p);
 hold on;
-title("自混合信号");
 %% 傅里叶变换看频谱
 figure(1);
-subplot(7,1,2);
+subplot(5,1,2);
 % w = hamming(N);
 f = fs / N * (0 : 1 : N-1);  % Fs/N就是这个频谱中的最小频率间隔！！！！！所以N越大，分辨率会越高
+%----------------------------
 p_ = fft(p);
+% 平移频域信号
+% fshift = (-N/2:N/2-1)*(fs/N);  % 平移后信号的频域范围
+% p_ = fftshift(p_);  % fftshift将零频分量移动到数组中心，重新排列
+% amp1 = abs(p_) * 2 / N ;
 amp1 = abs(p_);
 plot(amp1);
 title("平移后频域信号（未更改频域范围）");
+% subplot(5,1,3);
+% plot(fshift,amp1);
+% title("平移后频域信号（更改频域范围）");
 f2N = @(x) N/fs * x + 1;  % 映射了从频域到N的对应关系
 
-% 在频域上进行去直流的工作（去除一次、二次、三次谐波）
 p_([f2N(fm),f2N(2*fm),f2N(3*fm)])=0;
 p_([f2N(fs-fm),f2N(fs-2*fm),f2N(fs-3*fm)])=0;
 amp2 = abs(p_);
 subplot(7,1,3);
 plot(amp2)
-title("平移后频域信号（频域去直流）");
 p = ifft(p_);
+
 %% 全局变量
+windowLength = 1000; % 窗长
 overlapLength = floor(windowLength * 0.9);  % OverlapLength后为指定的重叠长度
 window = hamming(windowLength, "periodic");  % 使用汉明窗作为滑动的窗口
 fftLength = 5*windowLength;  % 每个时刻傅里叶变换的长度
@@ -88,7 +134,8 @@ title('抑制前');
 component1 = [fm-fm/2,fm+fm/2];
 component2 = [2*fm-fm/2,2*fm+fm/2];
 component3 = [3*fm-fm/2,3*fm+fm/2];
-TF1 = takeHarmonicComponent2(TF,fs,fm,component3(1),component3(2));  % 本质上一次谐波和三次谐波是一样的~
+% TF1(2*windowLength+1:3*windowLength,:) = TF(1*windowLength+1:2*windowLength,:);  % 取出一次谐波
+TF1 = takeHarmonicComponent2(TF,fs,fm,component3(1),component3(2));
 TF_curb =TF1;
 % 进行时频抑制
 TF_curb = TF_inhibit1(TF1,V);
@@ -107,6 +154,7 @@ p1 = imag(p_init1);
 % p1 = 2 * (p1 - -abs(hilbert(-p1)))./(abs(hilbert(p1)) - -abs(hilbert(-p1))) - 1;
 plot(p1);
 title('一次谐波时域信号');
+
 %% 二次谐波时频谱
 figure(2);
 TF2 = takeHarmonicComponent2(TF,fs,fm,component2(1),component2(2));
@@ -130,7 +178,7 @@ plot(p2);
 title('二次谐波时域信号');
 
 
-%% （由于这里拿到的是已经降C后的自混合信号，所以使用时域去直流的方式并不合适（无法判断方向））
+%% （去直流）
 subplot(7,1,6);
 % [top_p, loc_p, top_v, loc_v, top_r, loc_r, direction] = SMI_API_FRINGE(p1,N);
 % [p1] = SMI_API_ELIMINATE_DC1(p1,direction,"time");
@@ -141,6 +189,15 @@ subplot(7,1,6);
 % p2 = p33;
 % % plot(p2);
 % title("去直流后的自混合信号");
+
+%% 时频抑制
+% windowLength = 128; % 窗长
+% V = 0.65; % 抑制因子
+% [T,F,TF,TF_curb,p1] = SMI_API_TFPM(p1,N,fs,windowLength,V);
+% [T,F,TF,TF_curb,p2] = SMI_API_TFPM(p2,N,fs,windowLength,V);
+% plot(p1);
+% subplot(7,1,7);
+% plot(p2);
 
 %% 重构
 figure(3);
@@ -174,18 +231,18 @@ Lt_reconstruct = sgolayfilt(Lt_reconstruct,1,11);
 Lt_reconstruct = sgolayfilt(Lt_reconstruct,2,21);
 Lt_reconstruct = sgolayfilt(Lt_reconstruct,3,31);
 
-plot(Lt,'k');
-hold on;
+% plot(Lt,'k');
+% hold on;
 % Lt_reconstruct = Lt_reconstruct - mean(Lt_reconstruct); % 简写振动和余弦调制振动，重构后加上幅值A
 % Lt_reconstruct = Lt_reconstruct + 1.5 * lambda;  % 重构后的随机振动信号要加上幅值1.5的波长，这是为啥我页不知道
 plot(Lt_reconstruct,'r')
-title(['解包裹重构后的信号，C-reconstruct=', num2str(C)]);
+title(['解包裹重构后的信号，C-reconstruct', num2str('≈0')]);
 
 %% 误差分析
-subplot(5,1,4);
-plot(Lt-Lt_reconstruct);
-RMSE = sqrt(mean((Lt-Lt_reconstruct).^2));
-title(['绝对误差，RMSE=', num2str(RMSE)])
+% subplot(5,1,4);
+% plot(Lt-Lt_reconstruct);
+% RMSE = sqrt(mean((Lt-Lt_reconstruct).^2));
+% title(['绝对误差，RMSE=', num2str(RMSE)])
 
 
 
@@ -262,7 +319,7 @@ function TF1 = takeHarmonicComponent2(TF,fs,fm,x1,x2)  % TF为作STFT后的信�
      z2 = 0 + (fm/2 - min)/(max-min)*(F-0); 
      
      TF1 = zeros(size(TF));
-     TF1(z1:z2,:) = TF(y1:y2,:);
+     TF1(z1:z2,:) = TF(round(y1):round(y2),:);
 end
 
 %% 偶次幂函数！！！ 写了一个小时我真是醉了
