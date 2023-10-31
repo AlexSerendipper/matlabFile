@@ -1,9 +1,9 @@
 clc;
 clear all;
 close all;
-fs = 400000; 
+fs = 10000; 
 N = 10000;
-fv = 80; 
+fv = 10; 
 alpha = 5;
 n = 3 ;  % 翻倍次数，艹啊。2和3一样
 % arr = [834,2501,4168,5834,7501,9168];  % 去点
@@ -40,13 +40,13 @@ end
 
 p_init = p;
 
-[p,h] = SMI_API_MODULATE(beta,phiF,300,80000,0,t);  % 调制深度/调制频率/调制信号初始相位
+[p,h] = SMI_API_MODULATE(beta,phiF,300,2000,0,t);  % 调制深度/调制频率/调制信号初始相位
 % [phi0,h] = SMI_API_MODULATE2(phi0,300,80000,0,t);
 % for i = 1:N 
 %     C = c(i);
 %     p(i) = beta * cos(solve_phiF(C, phi0(i), alpha));  % 遍历所有的phi0
 % end
-p = awgn(p,40);  % 10db，加高斯噪声
+% p = awgn(p,40);  % 10db，加高斯噪声
 % p = p .* (1+0.2*cos(2*pi*75*t));  % 给自混合信号加包络，加了一个幅值为0.2，频率为75的包络
 plot(p);
 hold on;

@@ -20,14 +20,13 @@ subplot(9,1,1);
 % path =  'D:\matlab save\smi_实验信号\EOM\9v 10hz 2k 200k.csv'; 
 % path =  'D:\matlab save\smi_实验信号\EOM\11v 10hz 2k 200k.csv';  % 150000-50000,比较垃圾啊，不太行这个信号 
 % path =  'D:\matlab save\smi_实验信号\EOM\11v 40hz 4k 200k.csv';  % 312100-50000，这个还可以，看看有没有更好的
-path =  'D:\matlab save\smi_实验信号\EOM\9v 40hz 4k 200k.csv';  % 390000-50000，这是最好的目前
-M = 390000; N = 50000;  [t, p, fs] = MOVE_API_EXPERIMENT(M, N, path);  % 1 加载.csv文件，从M点处开始取N个点
+path =  'D:\zzj\matlabData\experi\34.csv';  % 390000-50000，这是最好的目前
+M = 10000; N = 62500;  [t, p, fs] = MOVE_API_EXPERIMENT2(M, N, path);  % 1 加载.csv文件，从M点处开始取N个点
 % load('xxx.mat');  % 2. 加载.mat文件
 lambda = 650e-9;  % 波长
 % p = sgolayfilt(p,1,11);
 % p = sgolayfilt(p,2,21);
 % p = sgolayfilt(p,3,31);
-
 % SMI_API_CORR_FILTER(p,smoothingfactor,threshold) 使用自相关能够有效去噪，但是在后续处理方向上反而不太好，可能是信号带散斑的原因
 % p = -1 + (p - min(p))/(max(p) - min(p)) * 2;  % 还是需要归一化一下，否则无法求acosp
 plot(p);
@@ -50,7 +49,7 @@ title("平移后频域信号（未更改频域范围）");
 
 %% 取出谐波成分，将平移后的频谱置零取出(丽萍学姐论文)
 % pp_ = takeHarmonicComponent(p_,6000,8000);  % 这个范围还是不能太小嗷，6500-7500误差就变大了
-pp_ = takeHarmonicComponent(p_,25500,26500);
+pp_ = takeHarmonicComponent(p_,42000,45000);
 % pp_ = takeHarmonicComponent(p_,25470,26480);
 subplot(9,1,3);
 amp2 = abs(pp_) * 2 / N ;
@@ -64,7 +63,7 @@ plot(p1);
 title("一次谐波时域信号")
 
 % pp_ = takeHarmonicComponent(p_,8000,10000);
-pp_ = takeHarmonicComponent(p_,26500,27500);
+pp_ = takeHarmonicComponent(p_,9000,9700);
 subplot(9,1,5);
 p2 = ifft(ifftshift(pp_));
 p2 = real(p2);
