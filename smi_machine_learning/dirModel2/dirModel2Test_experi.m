@@ -7,7 +7,7 @@ close all;
 % N = 8000;  
 % fv = 50;  % 震动频
 % C = [0.05];  % C设置一个从a到b变化的值
-% alpha = 5;
+alpha = 5;
 % [t, lambda, L0, Lt, phi0, p, c] = MOVE_API_HARMONIC(fs, N, fv, C, alpha);  % 1 简谐振动的自混合信号
 % plot(Lt);
 % title(['外部简谐振动,C=',num2str(C)]);
@@ -18,16 +18,16 @@ close all;
 % title("自混合信号");
 
 %% 实验信号判断
-% subplot(5, 1, 1);
-% path =  'D:\matlab save\smi_实验信号\L3_moderate_38332_43331.csv';  % 5 文件路径, M/N/win/w = 250515/16000/128/150
-% M = 40000; N = 10000; lambda = 650e-9; [t, p, fs] = MOVE_API_EXPERIMENT(M, N, path);  % 5 从M点处取N个点
-% plot(p);
+subplot(5, 1, 1);
+path =  'D:\matlab save\smi_实验信号\L3_moderate_38332_43331.csv';  % 5 文件路径, M/N/win/w = 250515/16000/128/150
+M = 40000; N = 10000; lambda = 650e-9; [t, p, fs] = MOVE_API_EXPERIMENT(M, N, path);  % 5 从M点处取N个点
+plot(p);
 
 %% TFPM信号的方向判断
-subplot(5, 1, 1);
-load("TFPM.mat");
-N=4000;
-plot(p);
+% subplot(5, 1, 1);
+% load("TFPM.mat");
+% N=4000;
+% plot(p);
 
 
 %% 得到重构所需的相关信息

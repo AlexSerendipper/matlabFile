@@ -3,7 +3,7 @@
 clc;
 clear all;
 close all;
-C=2.5;
+C=1.5;
 fs = 200000;  % 采样率，即1/fs(s)采一个点。
 N = 4000;  
 fv =  100;  % 震动频率
@@ -25,7 +25,7 @@ end
 [p] = SMI_API_ELIMINATE_DC1(p_init,direction,"time");
 %     [p] = SMI_API_ELIMINATE_DC2(p_init,direction,"time");
 %     [p1,p2] = SMI_API_evenlopEXTRACT_HT_PRO(p,N);
-%     p = p2;
+%     p = p1;
 
 % 全局变量
 windowLength = 512; % 窗长
@@ -131,7 +131,6 @@ while i<N
             end
         end
         n = floor((j-i)/2);
-        
         
         % 将0的前半部分设为前值
         for k = i:i+n-1

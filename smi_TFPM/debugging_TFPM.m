@@ -12,7 +12,7 @@ c=C(1);
 alpha = 4;
 [t, lambda, L0, Lt, phi0, p, c] = MOVE_API_HARMONIC(fs, N, fv, C, alpha);  % 1 简谐振动的自混合信号
 p_init = p;
-plot(p_init);
+plot(t,p_init);
 %% 得到重构所需的方向信息
 [top_p, loc_p, top_v, loc_v, top_r, loc_r, direction] = SMI_API_FRINGE(p_init,N);  % 法1求方向，求的是初始信号的方向，所以都能用
 
@@ -36,12 +36,12 @@ figure(2);
 subplot(4,2,[1,2,3.4]);
 [T,F,TF,TF_curb,p] = SMI_API_TFPM(p,N,fs,windowLength,V);
 
-mesh(abs(TF)); set(gca,'YTickLabel',[]); ylabel('Frq.', 'FontSize',7,'FontWeight','bold' ); 
+mesh(T,F,abs(TF)); set(gca,'YTickLabel',[]); ylabel('Frq.', 'FontSize',7,'FontWeight','bold' ); 
 view(0,90); % 设置初始视角为俯视角
 title('抑制前');
 
 subplot(4,2,[5,6,7,8]);
-mesh(abs(TF_curb)); set(gca,'YTickLabel',[]); ylabel('Frq.', 'FontSize',7,'FontWeight','bold' );
+mesh(T,F,abs(TF_curb)); set(gca,'YTickLabel',[]); ylabel('Frq.', 'FontSize',7,'FontWeight','bold' );
 view(0,90); % 设置初始视角为俯视角
 title('抑制后');
 
@@ -63,8 +63,6 @@ hold on;
 top_v = -top_v;
 scatter(loc_p,top_p);
 scatter(loc_v,top_v);
-
-
 title('时频谱处理后的时域信号');
 
 %% 希尔伯特变换重构

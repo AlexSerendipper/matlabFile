@@ -1,59 +1,68 @@
 %% 主要想利用该方法解决两个问题，一个是拓展调制的C的范围（力图使调制能工作在C比较大的时候）
 %% 第二是解决了TFPM算法中无法判断方向的问题
-%% 这个文件并未引入降C工作
- 
+%% 调制+TFPM的东西，应该是和参数设置有关系，下一步是实现自动化（画图时根据T,F来画）。
+%% 第二步就是把降C的工作引入到其中。
+%% 第三步就是去直流，现在好像就差 去直流了，引入就结束了！！！ 
+
 %% 经过多次仿真，fs/fm需要为整数才能实现频谱的正常搬移，但是一定要注意搬移距离至少要大到有足够间隔
 %   如果频谱搬运正常，但是逆变换后的图像很乱，可能是窗长设置问题，窗长设置为整数比较好
 %   如果频谱搬运正常，但是逆变换后的图像是一条直线，可能是取实部或虚部的问题
 %   如果出现一次谐波清楚，二次谐波淡，可能是调制深度的问题
-%   如果出现时频谱没有按照调制深度进行搬移，可能是调制深度的问题
+%   如果出现时频谱没有按照调制频率进行搬移（或tan(phiF)很丑），可能是调制深度的问题
 %   重构的误差（可能重构的Lt是波折的），和调制深度有很大关系
 %% 全局变量
 clc;
 clear all;
 close all;
-fs = 100000;  % 采样率
-N = 8000;  
-fv = 30;  % 震动频
+% fs = 100000;  % 采样率
+% N = 8000;  
+fv = 10;  % 震动频
 alpha = 5;
-C = [1.2]; 
-h = 300; % 调制深度
-fm = 10000;  % 调制频率
-gamma = 0;  % 调制初相位
-beta = 1;
-windowLength = 500; % 窗长
-%% 产生自混合信号
-figure(1);
-subplot(5,1,1);
-[t, lambda, L0, Lt, phi0, phiF, p, c] = MOVE_API_HARMONIC(fs, N, fv, C, alpha);
-p_init = p;
-[p,h] = SMI_API_MODULATE(beta,phiF,h,fm,gamma,t);  % 调制深度/调制频率/调制信号初始相位
+dir = -1; % 方向
+% 
+h = 50; % 调制深度
+fm = 8000;  % 调制频率
+% gamma = 0;  % 调制初相位
 
-% p = awgn(p,30);  % 10db，加高斯噪声
-% p = p .* (1+0.2*cos(2*pi*75*t));  % 给自混合信号加包络，加了一个幅值为0.2，频率为75的包络
 
+%% 实验信号
+path =  'D:\zzj\matlabData\experi\49_1_moderate_12v_8k_300mv_10hz_h50_N5000_M20000_phi10_offset0√.csv';
+M = 5000; N = 20000;  [t, p, fs] = MOVE_API_EXPERIMENT(M, N, path);  % 1 加载.csv文件，从M点处开始取N个点
+
+fs = round(fs);
+% load('xxx.mat');  % 2. 加载.mat文件
+lambda = 650e-9;  % 波长
+subplot(7,1,1);
 plot(p);
 hold on;
-title("自混合信号");
-
 %% 傅里叶变换看频谱
 figure(1);
-subplot(5,1,2);
+subplot(7,1,2);
 % w = hamming(N);
 f = fs / N * (0 : 1 : N-1);  % Fs/N就是这个频谱中的最小频率间隔！！！！！所以N越大，分辨率会越高
+%----------------------------
 p_ = fft(p);
 % 平移频域信号
-fshift = (-N/2:N/2-1)*(fs/N);  % 平移后信号的频域范围
-p_ = fftshift(p_);  % fftshift将零频分量移动到数组中心，重新排列
+% fshift = (-N/2:N/2-1)*(fs/N);  % 平移后信号的频域范围
+% p_ = fftshift(p_);  % fftshift将零频分量移动到数组中心，重新排列
 % amp1 = abs(p_) * 2 / N ;
 amp1 = abs(p_);
 plot(amp1);
-title("平移后频域信号（未更改频域范围）(可不画)");
-subplot(5,1,3);
-plot(fshift,amp1);
-title("平移后频域信号（更改频域范围）");
+title("平移后频域信号（未更改频域范围）");
+% subplot(5,1,3);
+% plot(fshift,amp1);
+% title("平移后频域信号（更改频域范围）");
+f2N = @(x) N/fs * x + 1;  % 映射了从频域到N的对应关系
+
+% p_([f2N(fm),f2N(2*fm),f2N(3*fm)])=0;
+% p_([f2N(fs-fm),f2N(fs-2*fm),f2N(fs-3*fm)])=0;
+amp2 = abs(p_);
+subplot(7,1,3);
+plot(amp2)
+p = ifft(p_);
 
 %% 全局变量
+windowLength = 1000; % 窗长
 overlapLength = floor(windowLength * 0.9);  % OverlapLength后为指定的重叠长度
 window = hamming(windowLength, "periodic");  % 使用汉明窗作为滑动的窗口
 fftLength = 5*windowLength;  % 每个时刻傅里叶变换的长度
@@ -85,56 +94,80 @@ title('抑制前');
 %% 一次谐波时频谱
 component1 = [fm-fm/2,fm+fm/2];
 component2 = [2*fm-fm/2,2*fm+fm/2];
+component3 = [3*fm-fm/2,3*fm+fm/2];
 % TF1(2*windowLength+1:3*windowLength,:) = TF(1*windowLength+1:2*windowLength,:);  % 取出一次谐波
 TF1 = takeHarmonicComponent2(TF,fs,fm,component1(1),component1(2));
+TF_curb =TF1;
+% 进行时频抑制
+TF_curb = TF_inhibit1(TF1,V);
 subplot(4,2,[2,4]);
-mesh(T,F,abs(TF1)); set(gca,'YTickLabel',[]); ylabel('Frq.', 'FontSize',7,'FontWeight','bold' );
+mesh(T,F,abs(TF_curb)); set(gca,'YTickLabel',[]); ylabel('Frq.', 'FontSize',7,'FontWeight','bold' );
 view(0,90);
 title('一次谐波时频谱');
-TF_curb = TF1;
 
-% 进行时频抑制
-% TF_curb = TF_inhibit1(TF1,V);
-% subplot(4,2,[5,7]);
-% mesh(abs(TF_curb)); set(gca,'YTickLabel',[]); ylabel('Frq.', 'FontSize',7,'FontWeight','bold' );
-% view(0,90);
-% title('一次谐波抑制后')
 
 figure(1);
-subplot(5,1,4);
+subplot(7,1,4);
 p = (istft(TF_curb, fs, 'Window', window, 'OverlapLength', overlapLength, 'FFTLength', 5*windowLength))';
 p_init1 = p;  % 用p_init1存储未归一化的信号
 p_init1 = p_init1(padding+1:end-padding);  % ✔去掉之前的padding
 p1 = imag(p_init1);
+% p1 = 2 * (p1 - -abs(hilbert(-p1)))./(abs(hilbert(p1)) - -abs(hilbert(-p1))) - 1;
 plot(p1);
 title('一次谐波时域信号');
 
 %% 二次谐波时频谱
 figure(2);
 TF2 = takeHarmonicComponent2(TF,fs,fm,component2(1),component2(2));
+TF_curb = TF2;
+% 进行时频抑制
+TF_curb = TF_inhibit1(TF2,V);
+
 subplot(4,2,[6,8]);
-mesh(abs(TF2)); set(gca,'YTickLabel',[]); ylabel('Frq.', 'FontSize',7,'FontWeight','bold' );
+mesh(abs(TF_curb)); set(gca,'YTickLabel',[]); ylabel('Frq.', 'FontSize',7,'FontWeight','bold' );
 view(0,90);
 title('二次谐波时频谱');
-TF_curb = TF2;
 
 figure(1);
-subplot(5,1,5);
+subplot(7,1,5);
 p = (istft(TF_curb, fs, 'Window', window, 'OverlapLength', overlapLength, 'FFTLength', 5*windowLength))';
 p_init2 = p;  % 用p_init2存储未归一化的信号
 p_init2 = p_init2(padding+1:end-padding);  % ✔去掉之前的padding
 p2 = real(p_init2);
+% p2 = 2 * (p2 - -abs(hilbert(-p2)))./(abs(hilbert(p2)) - -abs(hilbert(-p2))) - 1;
 plot(p2);
 title('二次谐波时域信号');
 
-%%
+
+%% （去直流）
+subplot(7,1,6);
+% [top_p, loc_p, top_v, loc_v, top_r, loc_r, direction] = SMI_API_FRINGE(p1,N);
+% [p1] = SMI_API_ELIMINATE_DC1(p1,direction,"time");
+% [p2] = SMI_API_ELIMINATE_DC2(p_init,direction,"time");
+% [p11,p22] = SMI_API_evenlopEXTRACT_HT_PRO(p1,N);
+% [p33,p44] = SMI_API_evenlopEXTRACT_HT_PRO(p2,N);
+% p1 = p11;
+% p2 = p33;
+% % plot(p2);
+% title("去直流后的自混合信号");
+
+%% 时频抑制
+% windowLength = 128; % 窗长
+% V = 0.65; % 抑制因子
+% [T,F,TF,TF_curb,p1] = SMI_API_TFPM(p1,N,fs,windowLength,V);
+% [T,F,TF,TF_curb,p2] = SMI_API_TFPM(p2,N,fs,windowLength,V);
+% plot(p1);
+% subplot(7,1,7);
+% plot(p2);
+
+%% 重构
 figure(3);
 subplot(5,1,1);
 p1 = p1 ./ -besselj(1,2*h); 
 p2 = p2 ./ besselj(2,2*h);
 phiF_wrapped = atan(p1./p2);
-phiF_wrapped = - phiF_wrapped;
-
+% 方向问题
+phiF_wrapped = dir * phiF_wrapped;
 plot(phiF_wrapped);
 
 %% 解包裹重构
@@ -153,22 +186,53 @@ plot(phiF_reconstruct);
 title("phiF-reconstruct")
 
 subplot(5,1,3);
-phi0_reconstrut = phiF_reconstruct + C*sin(phiF_reconstruct+atan(alpha));
+phi0_reconstrut = phiF_reconstruct + 0*sin(phiF_reconstruct+atan(alpha));
 Lt_reconstruct = phi0_reconstrut * lambda / (4 * pi);
-% Lt_reconstruct(1:padding)=[];
-% Lt_reconstruct(end-padding+1:end)=[];
-plot(Lt,'k');
-hold on;
-% Lt_reconstruct = Lt_reconstruct - mean(Lt_reconstruct); % 简写振动和余弦调制振动，重构后加上幅值A
-% Lt_reconstruct = Lt_reconstruct + 1.5 * lambda;  % 重构后的随机振动信号要加上幅值1.5的波长，这是为啥我页不知道
-plot(Lt_reconstruct,'r')
-title(['解包裹重构后的信号，C-reconstruct=', num2str(C)]);
+Lt_reconstruct = sgolayfilt(Lt_reconstruct,1,11);
+Lt_reconstruct = sgolayfilt(Lt_reconstruct,2,21);
+Lt_reconstruct = sgolayfilt(Lt_reconstruct,3,31);
 
-%% 误差分析
-subplot(5,1,4);
-plot(Lt-Lt_reconstruct);
+
+Lt_reconstruct = Lt_reconstruct - mean(Lt_reconstruct); % 简写振动和余弦调制振动，重构后加上幅值A
+% Lt_reconstruct = Lt_reconstruct + 1.5 * lambda;  % 重构后的随机振动信号要加上幅值1.5的波长，这是为啥我页不知道
+
+%% 
+plot(Lt_reconstruct,'r')
+hold on;
+title(['解包裹重构后的信号(经过平滑处理)，C-reconstruct', num2str('≈0')]);
+
+% 定标相位
+% plot(Lt_reconstruct);
+% hold on;
+% for i= -30-5:-21-5
+%     plot(MOVE_API_STANDARD(300, fv, fs, N, i,0));
+%     hold on;
+% end
+% begin = -35;
+% step = 1;
+% legend("lt-reconstruct",num2str(begin),num2str(begin+1*step),num2str(begin+2*step),num2str(begin+3*step),num2str(begin+4*step),num2str(begin+5*step),num2str(begin+6*step),num2str(begin+7*step),num2str(begin+8*step),num2str(begin+9*step));
+
+% 定标上下偏移量
+% plot(Lt_reconstruct);
+% hold on;
+% for i= -5:4
+%     plot(MOVE_API_STANDARD(300, fv, fs, N, 10, i));
+%     hold on;
+% end
+% begin = -5;
+% step = 1;
+% legend("lt-reconstruct",num2str(begin),num2str(begin+1*step),num2str(begin+2*step),num2str(begin+3*step),num2str(begin+4*step),num2str(begin+5*step),num2str(begin+6*step),num2str(begin+7*step),num2str(begin+8*step),num2str(begin+9*step));
+
+
+Lt = MOVE_API_STANDARD(300, fv, fs, N, 10, 0);
+plot(Lt);
+
+% 误差分析
+% subplot(5,1,4);
+% plot(Lt-Lt_reconstruct);
 RMSE = sqrt(mean((Lt-Lt_reconstruct).^2));
-title(['绝对误差，RMSE=', num2str(RMSE)])
+title(['绝对误差，RMSE=', num2str(RMSE)]);
+
 
 
 
@@ -245,7 +309,7 @@ function TF1 = takeHarmonicComponent2(TF,fs,fm,x1,x2)  % TF为作STFT后的信�
      z2 = 0 + (fm/2 - min)/(max-min)*(F-0); 
      
      TF1 = zeros(size(TF));
-     TF1(z1:z2,:) = TF(y1:y2,:);
+     TF1(z1:z2,:) = TF(round(y1):round(y2),:);
 end
 
 %% 偶次幂函数！！！ 写了一个小时我真是醉了

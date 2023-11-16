@@ -1,10 +1,9 @@
-%% 获得降C后的自混合信号
-%% 目前来看准确率是百分之百
+%% 获得降C后的自混合信号的条纹方向数据（目前来看准确率是百分之百）
 clc;
 clear all;
 close all;
 %% 产生自混合信号
-C=1.5;
+C=0.5;
 fs = 200000;  % 采样率，即1/fs(s)采一个点。
 N = 4000;  
 fv =  100;  % 震动频率
@@ -29,7 +28,7 @@ end
 %     p = p2;
 subplot(6,1,1)
 plot(p);
-
+title("去直流后的自混合信号");
 %% 全局变量
 windowLength = 512; % 窗长
 V = 0.65; % 抑制因子
@@ -55,7 +54,7 @@ plot(direction);
 hold on;
 scatter(loc_p,top_p);
 scatter(loc_v,top_v);
-
+title("降C后的自混合信号峰谷值 及 原始信号方向");
 %% 若方向变换的点 附近(30)有峰谷值，记录为翻转点，并将那点从谷值中删除
 % 当c<1.5时，使用附近30的策略，标记翻转点,如果附近30没有，就标记当前点为翻转点。     当c>=1.5时，将方向变换的点右侧第一个峰谷值标记为翻转点
 loc_r=[];
@@ -126,6 +125,7 @@ hold on;
 plot(direction);
 scatter(loc_v,top_v);
 scatter(loc_r,0);
+title("降C后的自混合信号 及 正确的方向（翻转点）");
 
 %% 拿信号
 fringeData = [];
@@ -149,7 +149,6 @@ for i=2:length(loc_ov)
     loc_ = [SMI_API_RESAMPLE(loc,int_) dir];  % 方向作为最后一个点
     fringeData = [fringeData;loc_];
 end
-
 
 subplot(6,1,4)
 plot(fringeData(3,:))

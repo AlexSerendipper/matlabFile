@@ -1,3 +1,4 @@
+%% 带噪自混合信号条纹方向的获取
 clc;
 clear all;
 close all;
@@ -5,14 +6,14 @@ close all;
 fs = 200000;  % 采样率，即fs(s)采一个点。
 N = 8000;  
 fv = 50;  % 震动频
-C = [2.8];  % C设置一个从a到b变化的值
+C = [1];  % C设置一个从a到b变化的值
 alpha = 5;
 [t, lambda, L0, Lt, phi0, p, c] = MOVE_API_HARMONIC(fs, N, fv, C, alpha);  % 1 简谐振动的自混合信号
 [top_ov,loc_ov,top_p, loc_p, top_v, loc_v, top_r, loc_r, direction] = SMI_API_FRINGE(p,N);
 subplot(6, 1, 1);
 % p = p .* (1+0.2*cos(2*pi*75*t));  % 给自混合信号加包络，加了一个幅值为0.2，频率为75的包络
 p = -1 + (p-min(p))/(max(p)-min(p))*2;
-p = awgn(p,15); 
+p = awgn(p,35); 
 plot(p);
 hold on;
 [top_v,loc_v] = findpeaks(-p);  % 'minpeakdistance'
@@ -81,11 +82,11 @@ for i = 1:length(loc_ov)-1
         if(top_ov(i+1)>top_ov(i))
             top_ov(i+1) = nan;
             loc_ov(i+1) = nan;
-            i = i+2;
+%             i = i+2;
         else
             top_ov(i) = nan;
             loc_ov(i) = nan;
-            i = i+2;
+%             i = i+2;
         end
     end
 end
