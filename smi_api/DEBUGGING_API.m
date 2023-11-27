@@ -5,7 +5,7 @@ subplot(7,1,1);
 fs = 200000; % 采样率
 N = 4000;  % 采样点
 fv = 100;  % 震动频率
-C = [1, 1]; 
+C = [0.5]; 
 c=C(1);
 alpha = 4;
 [t, lambda, L0, Lt, phi0, p] = MOVE_API_HARMONIC(fs, N, fv, C, alpha);  % 1 简谐振动的自混合信号
