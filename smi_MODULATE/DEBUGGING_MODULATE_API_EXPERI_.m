@@ -1,5 +1,4 @@
 %% 该程序用于调试，其实也是非常好用且重要的
-%% 啊艹，数条纹实验信号比仿真信号还好做，我日了你大爸的
 
 %% 全局变量
 clc;
@@ -7,36 +6,40 @@ clear all;
 close all;
 % fs = 100000;  % 采样率，即fs(s)采一个点。采样率越大，调制频率就要越大，否则会失真，默认采样率10000==>调制频率2000，二者成倍数关系
 % N = 10000;  % 调制默认值为10000
-fv = 40;  % 震动频，调制默认值为10
+fv = 10;  % 震动频，调制默认值为10
 alpha = 5;
-n = 3;
+n = 0;
 % arr = [1251,3751,6251,8751];  % 去点
 % arr1 = [1251,3751,6251,8751];  % 方向
+fm = 6000;
 
 %% 实验信号
 figure(1);
-subplot(5,1,1);
+subplot(7,1,1);
 
-% path =  'D:\matlab save\smi_实验信号\EOM_HL\11v 10hz 2k 200k.csv';  % 150000-50000,比较垃圾啊，不太行这个信号 
-path =  'D:\matlab save\smi_实验信号\EOM_HL\11v 40hz 4k 200k.csv';  % 312100-50000，这个还可以，看看有没有更好的
-% path =  'D:\matlab save\smi_实验信号\EOM_HL\9v 40hz 4k 200k.csv';  % 390000-50000，这是最好的目前
-M = 312100; N = 50000;  [t, p, fs] = MOVE_API_EXPERIMENT(M, N, path);  % 1 加载.csv文件，从M点处开始取N个点
+% path =  'D:\matlab save\smi_实验信号\EOM\9v 10hz 2k 200k.csv'; 
+% path =  'D:\matlab save\smi_实验信号\EOM\11v 10hz 2k 200k.csv';  % 150000-50000,比较垃圾啊，不太行这个信号 
+% path =  'D:\matlab save\smi_实验信号\EOM\11v 40hz 4k 200k.csv';  % 312100-50000，这个还可以，看看有没有更好的
+path =  'D:\zzj\matlabData\experi\50_1_moderate_12v_6k_300mv_10hz_test.csv';
+M = 5000; N = 15000;  [t, p, fs] = MOVE_API_EXPERIMENT(M, N, path);  % 1 加载.csv文件，从M点处开始取N个点
+
 % load('xxx.mat');  % 2. 加载.mat文件
 lambda = 650e-9;  % 波长
 % p = sgolayfilt(p,1,11);
 % p = sgolayfilt(p,2,21);
 % p = sgolayfilt(p,3,31);
-
 % SMI_API_CORR_FILTER(p,smoothingfactor,threshold) 使用自相关能够有效去噪，但是在后续处理方向上反而不太好，可能是信号带散斑的原因
 % p = -1 + (p - min(p))/(max(p) - min(p)) * 2;  % 还是需要归一化一下，否则无法求acosp
 plot(p);
 hold on;
 
+
 %% 傅里叶变换看频谱
 figure(1);
-subplot(5,1,2);
+subplot(7,1,2);
 % w = hamming(N);
 f = fs / N * (0 : 1 : N-1);  % Fs/N就是这个频谱中的最小频率间隔！！！！！所以N越大，分辨率会越高
+%----------------------------
 p_ = fft(p);
 % 平移频域信号
 fshift = (-N/2:N/2-1)*(fs/N);  % 平移后信号的频域范围
@@ -45,37 +48,49 @@ p_ = fftshift(p_);  % fftshift将零频分量移动到数组中心，重新排�
 amp1 = abs(p_);
 plot(amp1);
 title("平移后频域信号（未更改频域范围）");
-% plot(f(1:N/2), amp1(1:N/2));  % fft算法默认是双边谱,通常我们只取一半
+subplot(7,1,3);
+plot(fshift,amp1);
+title("平移后频域信号（更改频域范围）");
+
 
 %% 取出谐波成分，将平移后的频谱置零取出(丽萍学姐论文)
-% pp_ = takeHarmonicComponent(p_,6000,8000);  % 这个范围还是不能太小嗷，6500-7500误差就变大了
-pp_ = takeHarmonicComponent(p_,25500,26500);
-% pp_ = takeHarmonicComponent(p_,25470,26480);
-
-
-subplot(5,1,3);
+pp_ = takeHarmonicComponent2(p_,fm,fshift,1); 
+% pp_ = takeHarmonicComponent(p_,112000-3000,112000+3001);
+subplot(7,1,4);
 amp2 = abs(pp_) * 2 / N ;
 plot(fshift,amp2);
 title("取出的一次谐波成分（更改了频域范围）");
 
-subplot(5,1,4);
+subplot(7,1,6);
 p1 = ifft(ifftshift(pp_));
 p1 = imag(p1);  % 呃。。。文章里一次谐波取的是虚部，这里为啥一次谐波取实部啊，所以这是sin
+% p1 = sgolayfilt(p1,1,11);
+% p1 = sgolayfilt(p1,2,21);
+% p1 = sgolayfilt(p1,3,31);
 plot(p1);
 title("一次谐波时域信号")
 
-% pp_ = takeHarmonicComponent(p_,8000,10000);
-pp_ = takeHarmonicComponent(p_,26500,27500);
-% pp_ = takeHarmonicComponent(p_,26760,26246);
-subplot(5,1,5);
+pp_ = takeHarmonicComponent2(p_,fm,fshift,2); 
+% pp_ = takeHarmonicComponent(p_,12401-602,12401+600);
+subplot(7,1,5);
+amp2 = abs(pp_) * 2 / N ;
+plot(fshift,amp2);
+title("取出的二次谐波成分（更改了频域范围）");
+
+subplot(7,1,7);
 p2 = ifft(ifftshift(pp_));
 p2 = real(p2);
+% p2 = sgolayfilt(p2,1,11);
+% p2 = sgolayfilt(p2,2,21);
+% p2 = sgolayfilt(p2,3,31);
 plot(p2);
 title("二次谐波时域信号")
 
+
 %% 条纹翻倍
-figure();
-N = 13610;
+
+figure(2);
+% N = 13610;
 p1 = p1(1:N);  % 太长了，取短一点来用
 p2 = p2(1:N);
 
@@ -265,6 +280,19 @@ function pp_ = takeHarmonicComponent(p_,X,Y)  % p_为输入频谱。其中XY分�
      pp_(X:Y) = 0;
 end
 
+%% 取出谐波信号函数,使用fshift的坐标
+function pp_ = takeHarmonicComponent2(p_,fm,fshift,n)  % p_为fftshift后的频谱。n为需要的谐波的阶数
+     N = length(p_); 
+     pp_ = p_;
+     X = find(fshift-n*fm<=0.001 & fshift-n*fm>=-0.001);  % fshift中移动n个fs，对应p_的位置
+     % step = (find(fshift==fm)-1-N/2)/2;
+     step = (find(fshift-fm<=0.001 & fshift-fm>=-0.001)-1-N/2)/2;
+     pp_(1:X-step) = 0;
+     pp_(X+step:end) = 0;
+     
+     pp_(N/2-step+1:N/2+step+1) = pp_(X-step:X+step);   
+     pp_(X-step:X+step) = 0;
+end
 
 %% subfunction （selfmixing-power）
 function phiF = solve_phiF(C,phi0,alpha)  % 求解出每一个phi0对应的phiF
