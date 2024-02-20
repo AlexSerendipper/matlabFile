@@ -26,15 +26,19 @@ fm = 8000;  % 调制频率
 
 
 %% 实验信号
-path =  'D:\zzj\matlabData\experi\49_1_moderate_12v_8k_300mv_10hz_h50_N5000_M20000_phi10_offset0√.csv';
-M = 5000; N = 20000;  [t, p, fs] = MOVE_API_EXPERIMENT(M, N, path);  % 1 加载.csv文件，从M点处开始取N个点
+% path =  'D:\matlab save\self-mixing\smi_modulate_tfpm\data\58_moderate_9v_14k_0.5v_10hz_N12000_M95050_h3.csv';
+path =  'D:\matlab save\self-mixing\smi_modulate_tfpm\data\49_1_moderate_12v_8k_300mv_10hz_h50_N5000_M20000_phi10_offset0√.csv';
+M = 0; N = 200000;  [t, p, fs] = MOVE_API_EXPERIMENT2(M, N, path);  % 1 加载.csv文件，从M点处开始取N个点
 
+p_ini2 = p;
 fs = round(fs);
 % load('xxx.mat');  % 2. 加载.mat文件
 lambda = 650e-9;  % 波长
 subplot(7,1,1);
 plot(p);
 hold on;
+
+
 %% 傅里叶变换看频谱
 figure(1);
 subplot(7,1,2);
@@ -42,12 +46,13 @@ subplot(7,1,2);
 f = fs / N * (0 : 1 : N-1);  % Fs/N就是这个频谱中的最小频率间隔！！！！！所以N越大，分辨率会越高
 %----------------------------
 p_ = fft(p);
+p_(1) = 0;
 % 平移频域信号
 % fshift = (-N/2:N/2-1)*(fs/N);  % 平移后信号的频域范围
 % p_ = fftshift(p_);  % fftshift将零频分量移动到数组中心，重新排列
 % amp1 = abs(p_) * 2 / N ;
 amp1 = abs(p_);
-plot(amp1);
+plot(f,amp1);
 title("平移后频域信号（未更改频域范围）");
 % subplot(5,1,3);
 % plot(fshift,amp1);
@@ -58,11 +63,11 @@ f2N = @(x) N/fs * x + 1;  % 映射了从频域到N的对应关系
 % p_([f2N(fs-fm),f2N(fs-2*fm),f2N(fs-3*fm)])=0;
 amp2 = abs(p_);
 subplot(7,1,3);
-plot(amp2)
+plot(f,amp2)
 p = ifft(p_);
 
 %% 全局变量
-windowLength = 1000; % 窗长
+windowLength = 500; % 窗长
 overlapLength = floor(windowLength * 0.9);  % OverlapLength后为指定的重叠长度
 window = hamming(windowLength, "periodic");  % 使用汉明窗作为滑动的窗口
 fftLength = 5*windowLength;  % 每个时刻傅里叶变换的长度
@@ -96,10 +101,11 @@ component1 = [fm-fm/2,fm+fm/2];
 component2 = [2*fm-fm/2,2*fm+fm/2];
 component3 = [3*fm-fm/2,3*fm+fm/2];
 % TF1(2*windowLength+1:3*windowLength,:) = TF(1*windowLength+1:2*windowLength,:);  % 取出一次谐波
-TF1 = takeHarmonicComponent2(TF,fs,fm,component1(1),component1(2));
+TF1 = takeHarmonicComponent2(F,TF,fs,fm,component1(1),component1(2));
 TF_curb =TF1;
+
 % 进行时频抑制
-TF_curb = TF_inhibit1(TF1,V);
+TF_curb = TF_inhibit1(TF1,V);TF_curb1 = TF_curb;
 subplot(4,2,[2,4]);
 mesh(T,F,abs(TF_curb)); set(gca,'YTickLabel',[]); ylabel('Frq.', 'FontSize',7,'FontWeight','bold' );
 view(0,90);
@@ -118,7 +124,7 @@ title('一次谐波时域信号');
 
 %% 二次谐波时频谱
 figure(2);
-TF2 = takeHarmonicComponent2(TF,fs,fm,component2(1),component2(2));
+TF2 = takeHarmonicComponent2(F,TF,fs,fm,component2(1),component2(2));
 TF_curb = TF2;
 % 进行时频抑制
 TF_curb = TF_inhibit1(TF2,V);
@@ -199,7 +205,7 @@ Lt_reconstruct = Lt_reconstruct - mean(Lt_reconstruct); % 简写振动和余弦�
 %% 
 plot(Lt_reconstruct,'r')
 hold on;
-title(['解包裹重构后的信号(经过平滑处理)，C-reconstruct', num2str('≈0')]);
+% title(['解包裹重构后的信号(经过平滑处理)，C-reconstruct', num2str('≈0')]);
 
 % 定标相位
 % plot(Lt_reconstruct);
@@ -225,7 +231,7 @@ title(['解包裹重构后的信号(经过平滑处理)，C-reconstruct', num2st
 
 
 Lt = MOVE_API_STANDARD(300, fv, fs, N, 10, 0);
-plot(Lt);
+plot(Lt,"k");
 
 % 误差分析
 % subplot(5,1,4);
@@ -297,21 +303,22 @@ function pp_ = takeHarmonicComponent(p_,X,Y)  % p_为输入频谱。其中XY分�
 end
 
 %% 根据指定范围从时频域取出谐波信号函数，根据[-fs/2,fs/2]对应[0,F]
-function TF1 = takeHarmonicComponent2(TF,fs,fm,x1,x2)  % TF为作STFT后的信号。F为作时频谱后的F，即length(TF)
-     max = fs/2;
-     min = -fs/2;
-     F = length(TF);
-     % 把[-fs/2,fs/2]的数据归一化到[0,F]之间
-     y1 = 0 + (x1 - min)/(max-min)*(F-0);
-     y2 = 0 + (x2 - min)/(max-min)*(F-0);
-     
-     z1 = 0 + (-fm/2 - min)/(max-min)*(F-0);
-     z2 = 0 + (fm/2 - min)/(max-min)*(F-0); 
-     
-     TF1 = zeros(size(TF));
-     TF1(z1:z2,:) = TF(round(y1):round(y2),:);
+function TF1 = takeHarmonicComponent2(F,TF,fs,fm,x1,x2) % TF为作STFT后的信号。x1-x2为需要取出的谐波在时频图中的位置
+    % max = fs/2;
+    % min = -fs/2; % max和min实际上就是时频谱纵轴(频域)的范围
+    max = F(end); 
+    min = F(1); % max和min实际上就是时频谱纵轴(频域)的范围
+    F = size(TF,1); % F为时频矩阵的行数
+    % 把 x1,x2(时频图中的尺度，所以最大最小值就是min~max)，将其归一化到 [0,F] 之间，即作出时频图和时频矩阵的映射关系
+    y1 = 0 + (x1 - min)/(max-min)*(F-0);
+    y2 = 0 + (x2 - min)/(max-min)*(F-0);
+    z1 = 0 + (-fm/2 - min)/(max-min)*(F-0);
+    z2 = 0 + (fm/2 - min)/(max-min)*(F-0); 
+    TF1 = zeros(size(TF));
+    offset = length(z1:z2)-length(round(y1):round(y2)); % 长度不一致补偿
+    z2 = z2 - offset; 
+    TF1(z1:z2,:) = TF(round(y1):round(y2),:);
 end
-
 %% 偶次幂函数！！！ 写了一个小时我真是醉了
 function p_x = evenPower(x,p) % x为i
     if(x==0)

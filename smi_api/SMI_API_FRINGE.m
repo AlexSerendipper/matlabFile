@@ -1,26 +1,31 @@
 %% 条纹识别计数API，返回峰谷值、翻转点、条纹方向以及相关必要信息,目前来说鲁棒性很强，C在0.1~4的范围内都能很好用
 %% 当初始振动为余弦振动时，在某些C和α值下方向判断出错，这是由于初始位置样条插值不准确，目前未找到解决办法，故主要使用正弦振动
-
-function  [top_p, loc_p, top_v, loc_v, top_r, loc_r, direction] = SMI_API_FRINGE(p,N)
+%% 返回的dir为使用包络判断的方向结果
+function  [top_p, loc_p, top_v, loc_v, top_r, loc_r, direction, direc, diffp, en_bottom, en_median, en_top] = SMI_API_FRINGE(p,N)
     %% 找到所有的峰谷值（包含跳变点）
     [top_p,loc_p] = findpeaks(p);
     [top_v,loc_v] = findpeaks(-p);
     top_v = -top_v;
     
     %% 包络确定方向！
+    p = sgolayfilt(p,1,11);
+    p = sgolayfilt(p,2,21);
+    p = sgolayfilt(p,3,31);
     diffp = diff(p);  % diff是相邻两个数的差分，对第一个位置补0
     diffp = [0,diffp];
     diff_acosp = diff(acos(p));
     diff_acosp = [0,diff_acosp];
 
+%     [top_diffp_p,loc_diffp_p] = findpeaks(diffp,'minpeakheight',0, 'minpeakdistance',150);  % 拿到极值和索引值
+%     [top_diffp_v,loc_diffp_v] = findpeaks(-diffp,'minpeakheight',0, 'minpeakdistance',150);  
     [top_diffp_p,loc_diffp_p] = findpeaks(diffp);  % 拿到极值和索引值
     [top_diffp_v,loc_diffp_v] = findpeaks(-diffp);  
-
     en_top = interp1(loc_diffp_p,top_diffp_p,1:N,'spline');  % 三次样条插值，曲线更平滑
     en_bottom = interp1(loc_diffp_v,-top_diffp_v,1:N,'spline');
 
     en_median = (en_top - (en_top - en_bottom)/2); 
     dir = -sign(en_median);  % 让direction指明方向
+    direc = dir;
     
     %% 利用方向信息，求出最合适的找翻转点的范围，大大增加了鲁棒性
     direction_seg1 = [];
@@ -35,19 +40,24 @@ function  [top_p, loc_p, top_v, loc_v, top_r, loc_r, direction] = SMI_API_FRINGE
     top_diffp_seg = [];
     loc_diffp_seg = [];  % 存储翻转点的区间
 
+    % 这里因为如果是方向是最后一段，可能由于缺少条纹而报错，为了不报错加了try catch处理
     for i = 1 : 2 : length(direction_seg)
-        if dir(direction_seg(i):direction_seg(i+1)) < 0  % 在方向小于0的时候求diffp【两端】的谷值！！！！这样找翻转点就不用缩小范围了！！！！！！！！！！！！！！！！！！！！
-            [tem1, tem2] = findpeaks(-diffp(direction_seg(i):direction_seg(i+1)));
-            top_diffp_seg = [top_diffp_seg, -tem1(1), -tem1(end)];
-            loc_diffp_seg = [loc_diffp_seg, tem2(1)+ direction_seg(i) - 1 , tem2(end) + direction_seg(i) - 1];   % 这里返回的索引是个难点！由于我是分段进行峰值寻找，索引值应当加上初始值（假设在[x,y]中找极值，返回索引是2，第2是极值点,实际上对应的索引值为x+2-1）
+        try
+            if dir(direction_seg(i):direction_seg(i+1)) < 0  % 在方向小于0的时候求diffp【两端】的谷值！！！！这样找翻转点就不用缩小范围了！！！！！！！！！！！！！！！！！！！！
+                [tem1, tem2] = findpeaks(-diffp(direction_seg(i):direction_seg(i+1)));
+                top_diffp_seg = [top_diffp_seg, -tem1(1), -tem1(end)];
+                loc_diffp_seg = [loc_diffp_seg, tem2(1)+ direction_seg(i) - 1 , tem2(end) + direction_seg(i) - 1];   % 这里返回的索引是个难点！由于我是分段进行峰值寻找，索引值应当加上初始值（假设在[x,y]中找极值，返回索引是2，第2是极值点,实际上对应的索引值为x+2-1）
 
-        else
-            [tem3, tem4] = findpeaks(diffp(direction_seg(i):direction_seg(i+1)));  % 在方向大于0的时候求diffp【两端】的峰值！！！！这样找翻转点就不用缩小范围了！！！！！！！！！！！！！！！！！！！！
-            top_diffp_seg = [top_diffp_seg, tem3(1), tem3(end)];
-            loc_diffp_seg = [loc_diffp_seg, tem4(1) + direction_seg(i) - 1, tem4(end) + direction_seg(i) - 1];
+            else
+                [tem3, tem4] = findpeaks(diffp(direction_seg(i):direction_seg(i+1)));  % 在方向大于0的时候求diffp【两端】的峰值！！！！这样找翻转点就不用缩小范围了！！！！！！！！！！！！！！！！！！！！
+                top_diffp_seg = [top_diffp_seg, tem3(1), tem3(end)];
+                loc_diffp_seg = [loc_diffp_seg, tem4(1) + direction_seg(i) - 1, tem4(end) + direction_seg(i) - 1];
+            end
+        catch
+            break;
         end
     end
-
+    
     top_diffp_seg([1,end]) = [];
     loc_diffp_seg([1,end]) = [];  % 最适合找翻转点的区间
     

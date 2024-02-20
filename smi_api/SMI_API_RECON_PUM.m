@@ -1,10 +1,10 @@
 %% 注意：传入的需要为处理后的纯净的峰谷值
-function [phiF_reconstruct,Lt_reconstruct] = SMI_API_RECON_PUM(p,loc_p,loc_v,direction,N,lambda,c,alpha)
+function [phiF_reconstruct,Lt_reconstruct] = SMI_API_RECON_PUM(p,loc_p,loc_v,direction,N,lambda,C,alpha)
     %% 解包裹重构
     acosp = acos(p);
-    plot(acosp);
-    title("acosp");
-    hold on;
+%     plot(acosp);
+%     title("acosp");
+%     hold on;
 
     % 设定初值,固定
     if sign(acosp(2) - acosp(1)) == direction(1)
@@ -38,15 +38,16 @@ function [phiF_reconstruct,Lt_reconstruct] = SMI_API_RECON_PUM(p,loc_p,loc_v,dir
 
 
     %% 参数估算
-    if(c~=0 && alpha~=0)
-        C_reconstruct = c;
+    if(C~=0)
+        C_reconstruct = C;
         alpha_reconstruct = alpha;
     else
         [C_reconstruct, alpha_reconstruct] = SMI_API_ESTIMATE_C(phiF_reconstruct); 
     end
 
     %% 重构
-    phi0_reconstrut = phiF_reconstruct + C_reconstruct*sin(phiF_reconstruct+atan(alpha_reconstruct));  % 这里的alpha如果用估算的，就会引入蛮大的误差
+     phi0_reconstrut = phiF_reconstruct + C_reconstruct.*sin(phiF_reconstruct+atan(alpha_reconstruct));  % 这里的alpha如果用估算的，就会引入蛮大的误差
+%     phi0_reconstrut = phiF_reconstruct + C_reconstruct.*sin(phiF_reconstruct+atan(6));
     Lt_reconstruct = phi0_reconstrut * lambda / (4 * pi);
     % Lt_reconstruct = Lt_reconstruct - mean(Lt_reconstruct); % 简写振动和余弦调制振动，重构后加上幅值A
     % Lt_reconstruct = Lt_reconstruct + 1.5 * lambda;  % 重构后的随机振动信号要加上幅值1.5的波长，这是为啥我页不知道

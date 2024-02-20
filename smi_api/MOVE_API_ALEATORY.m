@@ -1,26 +1,23 @@
 %% 随机振动自混合信号源API,产生自混合信号并返回必要参数（✔处设置保证频谱正确）
 %% 使用随机振动时，方向×负
-
+% 大论文：窗长为250，超参数1=1，75，超参数2=2
 function [t, lambda, L0, Lt, phi0, p, c] = MOVE_API_ALEATORY(fs, N, cut, C, alpha)   % fs为采样率(s)，每秒钟采样多少个点。采样率要比采样点数大的多才能不失真！N需要为2次幂,否则频谱混叠（✔）N = KM（M为运动周期）
     % T = 1/fs;  % 采样周期（s）,几秒钟采一个点
     t = (0:N-1)/fs;  % 采样时间，设N=10, fs=200，即采样了0.05s，t为[0...0.045]
     
     lambda = 650e-9;  % 波长
-    N_cut = 1:cut:N;  % cut降采样，输入一个能被N整除的数，将N分为N/cut段
-    Lt = -2 * lambda + (2 * lambda-(-2 * lambda)) * rand(1,N/cut);  % 产生-2 * lambda到2 * lambda之间的随机数
+    N_cut = cut:cut:N;  % cut降采样，输入一个能被N整除的数，将N分段，后续为这几个分段点赋值，然后插值即可
+    N_cut = [1,N_cut];  % 实际上，有N/cut+1个分段点，分段点建议包含首尾，即1和N，否则产生的随机振动在首尾会飘
+                        % 实际上分段点越多，大概率翻转点也越多
+    up = 2*lambda;
+    down = -2*lambda;
+    Lt = down + (up-down) * rand(1,N/cut+1);  % 产生-2 * lambda到2 * lambda之间的随机数，产生N/cut个
     Lt = interp1(N_cut,Lt,1:N,'spline');  
     L0 = 20 * lambda;  % 外腔距离（✔） 
     
     beta = 1;  % the amplitude of selfmixing signal
     phi0 = 4*pi*(L0+Lt)/lambda;
     p = zeros(1,N);
-    
-    % C的变化是一个正弦曲线，不能随机数！
-    C_lower = C(1);
-    C_upper = C(2);
-    % 这个乘和加保证了c的上下限
-    x = linspace(0, 3*pi, N);
-    c = (C_upper-C_lower)/2 * cos(x) + (C_upper - (C_upper-C_lower)/2);
     
     if length(C) == 1
         c = ones(1,N) * C;

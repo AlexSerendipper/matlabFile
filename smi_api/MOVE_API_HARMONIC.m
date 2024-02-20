@@ -1,22 +1,24 @@
-%% 简谐振动自混合信号源API,产生自混合信号并返回必要参数（返回phiF用于调制）（✔处设置保证频谱正确）
+%% 简谐振动自混合信号源API,产生自混合信号并返回必要参数（✔处设置保证频谱正确）
+%% C输入三项是C值随机变化的正弦振动
+
 function [t, lambda, L0, Lt, phi0, phiF, p, c] = MOVE_API_HARMONIC(fs, N, fv, C, alpha)   % fs为采样率(s)，每秒钟采样多少个点。采样率要比采样点数大的多才能不失真！fs/fv需为整数（✔）N需要为2次幂,否则频谱混叠（✔）N = KM（M为运动周期）
     % T = 1/fs;  % 采样周期（s）,几秒钟采一个点
     t = (0:N-1)/fs;  % 采样时间，设N=10, fs=200，即采样了0.05s，t为[0...0.045]
     lambda = 650e-9;  % 波长
-    A = 2 * lambda;  % 幅值（✔）
+    A = 2 * lambda;  % 幅值,配合fringe函数，暂时需要设置为λ/2的整数倍（✔）
     L0 = 20 * lambda;  % 外腔距离（✔） 
     Lt = A.* sin(2*pi*fv*t);  % L0为标称位置，外腔长度
     beta = 1;  % the amplitude of selfmixing signal
     phi0 = 4*pi*(L0+Lt)/lambda;
     p = zeros(1,N);
     
-    if length(C) == 1  % 恒定C
+    if length(C) == 1
         c = ones(1,N) * C;
         for i = 1:N 
             phiF(i) = solve_phiF(C, phi0(i), alpha);
             p(i) = beta * cos(solve_phiF(C, phi0(i), alpha));  % 遍历所有的phi0
         end
-    elseif length(C) == 2  % 变化C
+    elseif length(C) == 2
         % C的变化是一个正弦曲线
         C_lower = C(1);
         C_upper = C(2);
@@ -28,7 +30,7 @@ function [t, lambda, L0, Lt, phi0, phiF, p, c] = MOVE_API_HARMONIC(fs, N, fv, C,
             phiF(i) = solve_phiF(C, phi0(i), alpha);
             p(i) = beta * cos(solve_phiF(C, phi0(i), alpha));  % 遍历所有的phi0
         end
-    elseif length(C) == 3  % 随机变化C
+    elseif length(C) == 3
         load('D:\matlab save\self-mixing\smi_api\DATA_LLT_ALEATORY_4000(1).mat');  
         C_lower = C(1);
         C_upper = C(2);
@@ -39,7 +41,7 @@ function [t, lambda, L0, Lt, phi0, phiF, p, c] = MOVE_API_HARMONIC(fs, N, fv, C,
             p(i) = beta * cos(solve_phiF(C, phi0(i), alpha));  % 遍历所有的phi0
         end
     end
-   
+    
 end
 
 

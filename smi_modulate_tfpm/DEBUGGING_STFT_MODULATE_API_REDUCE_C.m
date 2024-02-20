@@ -3,7 +3,7 @@
 %% 这个文件引入了降C工作,已经基本实现了所有功能
 
 %% 经过多次仿真，fs/fm需要为整数才能实现频谱的正常搬移，但是一定要注意搬移距离至少要大到有足够间隔
-%   如果频谱搬运正常，但是逆变换后的图像很乱，可能是窗长设置问题，窗长设置为整数比较好
+%   如果频谱搬运正常，但是逆变换后的图像很乱，可能是窗长设置问题，窗长设置为整数比较好！
 %   如果频谱搬运正常，但是逆变换后的图像是一条直线，可能是取实部或虚部的问题
 %   如果出现一次谐波清楚，二次谐波淡，可能是调制深度的问题
 %   如果出现时频谱没有按照调制深度进行搬移，可能是调制深度的问题
@@ -12,14 +12,15 @@
 clc;
 clear all;
 close all;
-fs = 100000;  % 采样率
+fs = 100000;  % 采样率100000
 N = 8000;  
 fv = 30;  % 震动频
 alpha = 5;
-dir = 1; % 方向
-C = [0.1]; 
-h = 300; % 调制深度
-fm = 10000;  % 调制频率
+dir = -1; % 方向
+C = [2]; 
+% h = 3.355; % 调制深度（随机振动）
+h = 100;
+fm = 25000;  % 调制频率10000
 gamma = 0;  % 调制初相位
 beta = 1;
 windowLength = 500; % 窗长
@@ -27,12 +28,13 @@ windowLength = 500; % 窗长
 figure(1);
 subplot(7,1,1);
 [t, lambda, L0, Lt, phi0, phiF, p, c] = MOVE_API_HARMONIC(fs, N, fv, C, alpha);
+% [t, lambda, L0, Lt, phi0, p, c, phiF] = MOVE_API_ALEATORY_LOAD(fs, N, C, alpha);
 p_init = p;
+% p = awgn(p,10);  % 10db，加高斯噪声
+% p = p .* (1+0.5*cos(2*pi*75*t));  % 给自混合信号加包络，加了一个幅值为0.2，频率为75的包络
+p_ini2 = p;
 [p,h] = SMI_API_MODULATE(beta,phiF,h,fm,gamma,t);  % 调制深度/调制频率/调制信号初始相位
-
-% p = awgn(p,30);  % 10db，加高斯噪声
-% p = p .* (1+0.2*cos(2*pi*75*t));  % 给自混合信号加包络，加了一个幅值为0.2，频率为75的包络
-
+p_ini3 = p;
 plot(p);
 hold on;
 title("自混合信号");
@@ -42,14 +44,22 @@ subplot(7,1,2);
 % w = hamming(N);
 f = fs / N * (0 : 1 : N-1);  % Fs/N就是这个频谱中的最小频率间隔！！！！！所以N越大，分辨率会越高
 p_ = fft(p);
+
+% 移动
+% fshift = (-N/2:N/2-1)*(fs/N);  % 平移后信号的频域范围
+% p_ = fftshift(p_);  % fftshift将零频分量移动到数组中心，重新排列
+
 amp1 = abs(p_);
-plot(amp1);
+plot(f,amp1);
 title("平移后频域信号（未更改频域范围）");
 f2N = @(x) N/fs * x + 1;  % 映射了从频域到N的对应关系
 
-% 在频域上进行去直流的工作（去除一次、二次、三次谐波）
-% p_([f2N(fm),f2N(2*fm),f2N(3*fm)])=0;
-% p_([f2N(fs-fm),f2N(fs-2*fm),f2N(fs-3*fm)])=0;
+%% 在频域上进行去直流的工作（去除一次、二次、三次谐波）
+% p_([f2N(fm),f2N(2*fm),f2N(3*fm),f2N(4*fm)])=0;
+% p_([f2N(fs-fm),f2N(fs-2*fm),f2N(fs-3*fm),f2N(fs-4*fm)])=0;
+
+% p_([f2N(1*fm),f2N(3*fm)])=0;
+% p_([f2N(fs-1*fm),f2N(fs-3*fm)])=0;
 amp2 = abs(p_);
 subplot(7,1,3);
 plot(amp2)
@@ -59,7 +69,7 @@ p = ifft(p_);
 overlapLength = floor(windowLength * 0.9);  % OverlapLength后为指定的重叠长度
 window = hamming(windowLength, "periodic");  % 使用汉明窗作为滑动的窗口
 fftLength = 5*windowLength;  % 每个时刻傅里叶变换的长度
-V = 0.65; % 抑制因子2
+V = 0.85; % 抑制因子2
 
 %% padding,逆变换不可避免的会让信号变短，要padding
 judge = true; 
@@ -88,10 +98,10 @@ title('抑制前');
 component1 = [fm-fm/2,fm+fm/2];
 component2 = [2*fm-fm/2,2*fm+fm/2];
 component3 = [3*fm-fm/2,3*fm+fm/2];
-TF1 = takeHarmonicComponent2(TF,fs,fm,component3(1),component3(2));  % 本质上一次谐波和三次谐波是一样的~
-TF_curb =TF1;
+component4 = [4*fm-fm/2,4*fm+fm/2];
+TF1 = takeHarmonicComponent2(TF,fs,fm,component1(1),component1(2));  % 本质上一次谐波和三次谐波是一样的~
 % 进行时频抑制
-TF_curb = TF_inhibit1(TF1,V);
+TF_curb = TF_inhibit1(TF1,V);TF_curb1=TF_curb;
 subplot(4,2,[2,4]);
 mesh(T,F,abs(TF_curb)); set(gca,'YTickLabel',[]); ylabel('Frq.', 'FontSize',7,'FontWeight','bold' );
 view(0,90);
@@ -110,7 +120,6 @@ title('一次谐波时域信号');
 %% 二次谐波时频谱
 figure(2);
 TF2 = takeHarmonicComponent2(TF,fs,fm,component2(1),component2(2));
-TF_curb = TF2;
 % 进行时频抑制
 TF_curb = TF_inhibit1(TF2,V);
 
@@ -177,7 +186,7 @@ Lt_reconstruct = sgolayfilt(Lt_reconstruct,3,31);
 plot(Lt,'k');
 hold on;
 % Lt_reconstruct = Lt_reconstruct - mean(Lt_reconstruct); % 简写振动和余弦调制振动，重构后加上幅值A
-% Lt_reconstruct = Lt_reconstruct + 1.5 * lambda;  % 重构后的随机振动信号要加上幅值1.5的波长，这是为啥我页不知道
+Lt_reconstruct = Lt_reconstruct - 1.5 * lambda;  % 重构后的随机振动信号要加上幅值1.5的波长，这是为啥我页不知道
 plot(Lt_reconstruct,'r')
 title(['解包裹重构后的信号，C-reconstruct=', num2str(C)]);
 
@@ -188,9 +197,12 @@ RMSE = sqrt(mean((Lt-Lt_reconstruct).^2));
 title(['绝对误差，RMSE=', num2str(RMSE)])
 
 
-
-
-
+%% 个人记录
+f1 = f;
+amp1 = amp2;
+T1 = T;
+F1 = F;
+% TF1 =TF;
 
 
 

@@ -4,11 +4,11 @@ clear all;
 close all;
 fs = 100000;  % 采样率
 N = 8000;  
-fv = 20;  % 震动频
+fv = 30;  % 震动频
 
 alpha = 5;
 dir = 1; % 方向
-C = [0.1]; 
+C = [2.2]; 
 h = 300; % 调制深度
 fm = 10000;  % 调制频率
 gamma = 0;  % 调制初相位
@@ -21,11 +21,12 @@ arr1 = [1252,3754,6254];  % 方向
 figure(1);
 subplot(7,1,1);
 [t, lambda, L0, Lt, phi0, phiF, p, c] = MOVE_API_HARMONIC(fs, N, fv, C, alpha);
+% [t, lambda, L0, Lt, phi0, p, c, phiF] = MOVE_API_ALEATORY_LOAD(fs, N, C, alpha);
 p_init = p;
 [p,h] = SMI_API_MODULATE(beta,phiF,h,fm,gamma,t);  % 调制深度/调制频率/调制信号初始相位
 
-% p = awgn(p,30);  % 10db，加高斯噪声
-% p = p .* (1+0.2*cos(2*pi*75*t));  % 给自混合信号加包络，加了一个幅值为0.2，频率为75的包络
+p = awgn(p,10);  % 10db，加高斯噪声
+% p = p .* (1+0.5*cos(2*pi*75*t));  % 给自混合信号加包络，加了一个幅值为0.2，频率为75的包络
 
 plot(p);
 hold on;
@@ -88,6 +89,7 @@ p2 = p2 ./ besselj(2,2*h);
 n = n;  % 翻倍次数
 times = 2^n;
 [phiF_wrapped,Pn,Pnn] = SMI_API_TANDOUBLE_specific(n,p1,p2);
+phiF_wrapped = dir * phiF_wrapped;
 phiF_wrapped_init = phiF_wrapped; 
 plot(phiF_wrapped);
 hold on;
@@ -119,8 +121,8 @@ Lt_reconstruct = phi0_reconstrut * lambda / (4 * pi);
 % Lt_reconstruct(end-padding+1:end)=[];
 plot(Lt,'k');
 hold on;
-Lt_reconstruct = Lt_reconstruct - mean(Lt_reconstruct); % 简写振动和余弦调制振动，重构后加上幅值A
-% Lt_reconstruct = Lt_reconstruct + 1.5 * lambda;  % 重构后的随机振动信号要加上幅值1.5的波长，这是为啥我页不知道
+% Lt_reconstruct = Lt_reconstruct - mean(Lt_reconstruct); % 简写振动和余弦调制振动，重构后加上幅值A
+% Lt_reconstruct = Lt_reconstruct - 1.5 * lambda;  % 重构后的随机振动信号要加上幅值1.5的波长，这是为啥我页不知道
 plot(Lt_reconstruct,'r')
 title(['解包裹重构后的信号，C-reconstruct=', num2str(C)]);
 

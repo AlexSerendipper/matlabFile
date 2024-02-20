@@ -8,7 +8,7 @@
 %   如果出现一次谐波清楚，二次谐波淡，可能是调制深度的问题
 %   如果出现时频谱没有按照调制深度进行搬移，可能是调制深度的问题
 %   重构的误差（可能重构的Lt是波折的），和调制深度有很大关系
-%% 全局变量
+%% 全局变
 clc;
 clear all;
 close all;
@@ -16,7 +16,7 @@ fs = 100000;  % 采样率
 N = 8000;  
 fv = 30;  % 震动频
 alpha = 5;
-C = [1.2]; 
+C = [1]; 
 h = 300; % 调制深度
 fm = 10000;  % 调制频率
 gamma = 0;  % 调制初相位
@@ -26,6 +26,7 @@ windowLength = 500; % 窗长
 figure(1);
 subplot(5,1,1);
 [t, lambda, L0, Lt, phi0, phiF, p, c] = MOVE_API_HARMONIC(fs, N, fv, C, alpha);
+
 p_init = p;
 [p,h] = SMI_API_MODULATE(beta,phiF,h,fm,gamma,t);  % 调制深度/调制频率/调制信号初始相位
 
