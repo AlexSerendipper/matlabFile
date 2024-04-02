@@ -8,9 +8,10 @@ clear all;
 close all;
 %% 实验信号
 % path =  'D:\matlab save\smi_实验信号\experSignal\3_m_38332_5000.csv';  % 5 文件路径, M/N/win/w = 250515/16000/128/150
-path =  'D:\matlab save\smi_实验信号\experSignal\2_w_sanban_2240481_15000.csv';  % 1 文件路径
-% path = 'D:\matlab save\smi_实验信号\experSignal\8-m3.csv';
-M = 2240481; N = 15000; lambda = 650e-9; [t, p, fs] = MOVE_API_EXPERIMENT(M, N, path);  % 5 从M点处取N个点
+% path =  'D:\matlab save\smi_实验信号\experSignal_standard\2_w_sanban_2240481_15000.csv';  % 1 文件路径
+path = 'D:\matlab save\smi_实验信号\experSignal_standard\9_superweak_highSNR.csv';
+M = 37500; N = 3000; lambda = 650e-9; [t, p, fs] = MOVE_API_EXPERIMENT2(M, N, path);  % 5 从M点处取N个点
+[p,PS] = mapminmax(p,-1,1);
 subplot(6,1,1);
 plot(p);
 title("原始实验信号");
@@ -18,7 +19,7 @@ hold on;
 p_init = p;
 alpha = 4;  % 随便给个alpha
 
-% [top_p, loc_p, top_v, loc_v, top_r, loc_r, direction,direc] = SMI_API_FRINGE(p,N);
+[top_p, loc_p, top_v, loc_v, top_r, loc_r, direction,direc] = SMI_API_FRINGE(p,N);
 % plot(direc);
 %% first step ,calculate the MPD
 subplot(6, 1, 2);
@@ -97,7 +98,7 @@ subplot(6, 1, 6);
 plot(p);
 hold on;
 scatter(loc_op,top_op);
-% plot(direction);
+plot(direc);
 title("所有小于平均距离/1.25的点，取更大的点保留");
 
 
@@ -109,7 +110,7 @@ subplot(6,1,1)
 plot(p);
 % title("去直流后的自混合信号");
 %% 全局变量
-windowLength = 500; % 窗长
+windowLength = 200; % 窗长
 V = 0.65; % 抑制因子
 
 %% 时频分析
@@ -136,17 +137,19 @@ title("降C后的自混合信号峰谷值 及 原始信号方向");
 
 %% 对比降C后的信号与带噪信号峰值的位置
 dir = zeros(1,N);
-MPD2 = mean(diff(loc_v));
+MPD2 = mean(diff(loc_v))/0.85;
 for i = 1:length(loc_v)-1
-    before_idx = find(loc_op>loc_v(i) & loc_op<loc_v(i+1));  % 找到原始信号的峰值位置
-    after_idx = find(loc_p>loc_v(i) & loc_p<loc_v(i+1));  % 找到降C后的信号的峰值位置
+    before_idx = find(loc_op>loc_v(i) & loc_op<loc_v(i+1));  % 找到原始信号的峰值位置的索引
+    after_idx = find(loc_p>loc_v(i) & loc_p<loc_v(i+1));  % 找到降C后的信号的峰值位置的索引
     if(loc_v(i+1)-loc_v(i)>MPD2)  % 因为驼峰区存在很多异常情况，所以将驼峰区直接置零
                                   % 同时这个地方存在一定的鲁棒性，即通常情况下，驼峰区通常是对称大于平均峰值距离的~通过方向矫正，都能得到正确的方向
        dir(loc_v(i):loc_v(i+1)) = 0;
     elseif(loc_op(before_idx) > loc_p(after_idx))
         dir(loc_v(i):loc_v(i+1)) = 1;
-    else
+    elseif(loc_op(before_idx) < loc_p(after_idx))
         dir(loc_v(i):loc_v(i+1)) = -1;
+    elseif(loc_op(before_idx) == loc_p(after_idx))
+        dir(loc_v(i):loc_v(i+1)) = dir(loc_v(i)-1);  % 如果这个点在抑制后没有偏移，让他和之前的方向保持一致，提高个别判断错误的鲁棒性    
     end
 end
 % 处理头和尾
@@ -154,7 +157,7 @@ dir(1:loc_v(1)) = dir(loc_v(1));
 dir(loc_v(length(loc_v)-1):end) = dir(loc_v(length(loc_v)-1));
 plot(dir);
 
-%% 处理驼峰区 
+%% 处理驼峰区,如果初始方向被判定为0（驼峰区），这里会进入死循环
 i = 2;
 N = length(dir);
 while i<N
@@ -165,7 +168,7 @@ while i<N
             if(dir(j)~=0)
                 break
             end
-        end  % 遍历后j值为驼峰区的尾部点
+        end  % 遍历后j值为驼峰区的尾部点，i为驼峰区的起始点
         
         n = floor((j-i)/2);  % n即为驼峰区的中间点
         
@@ -190,6 +193,7 @@ subplot(6,1,3);
 plot(p);
 hold on;
 plot(dir);
+
 %% hilbert transform
 % subplot(5, 1, 5);
 inverse_hb = (imag(hilbert(p))) .* dir;  % 得到sin 

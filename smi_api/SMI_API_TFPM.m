@@ -1,4 +1,4 @@
-%% 时频抑制算法，最终返回抑制后逆变换回时域的信号
+%% 时频抑制算法，最终返回抑制后逆变换回时域的信号,一般V为0.65即可
 function  [T,F,TF,TF_curb,p] = SMI_API_TFPM(p,N,fs,windowLength,V)
     %% 全局变量
     overlapLength = floor(windowLength * 0.9);  % OverlapLength后为指定的重叠长度

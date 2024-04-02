@@ -21,7 +21,7 @@ alpha = 5;
 
 p = p .* (1+0.3*cos(2*pi*75*t));  % 给自混合信号加包络，加了一个幅值为0.2，频率为75的包络
 % p = -1 + (p-min(p))/(max(p)-min(p))*2;
-p = awgn(p,25);   % 噪声低于25，求出的峰值不够准确，并且在驼峰区位置会出现误差点
+p = awgn(p,30);   % 噪声低于25，求出的峰值不够准确，并且在驼峰区位置会出现误差点
 
 [top_p, loc_p, top_v, loc_v, top_r, loc_r, direction, direc, diffp, en_bottom, en_median, en_top] = SMI_API_FRINGE(p,N);
 subplot(7, 1, 1);

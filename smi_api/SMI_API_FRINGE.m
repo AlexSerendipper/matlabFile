@@ -13,14 +13,19 @@ function  [top_p, loc_p, top_v, loc_v, top_r, loc_r, direction, direc, diffp, en
     p = sgolayfilt(p,3,31);
     diffp = diff(p);  % diff是相邻两个数的差分，对第一个位置补0
     diffp = [0,diffp];
+    
+%     diffp = sgolayfilt(diffp,1,11);
+    
     diff_acosp = diff(acos(p));
     diff_acosp = [0,diff_acosp];
 
-%     [top_diffp_p,loc_diffp_p] = findpeaks(diffp,'minpeakheight',0, 'minpeakdistance',150);  % 拿到极值和索引值
-%     [top_diffp_v,loc_diffp_v] = findpeaks(-diffp,'minpeakheight',0, 'minpeakdistance',150);  
-    [top_diffp_p,loc_diffp_p] = findpeaks(diffp);  % 拿到极值和索引值
-    [top_diffp_v,loc_diffp_v] = findpeaks(-diffp);  
+    [top_diffp_p,loc_diffp_p] = findpeaks(diffp,'minpeakheight',0, 'minpeakdistance',150);  % 拿到极值和索引值
+    [top_diffp_v,loc_diffp_v] = findpeaks(-diffp,'minpeakheight',0, 'minpeakdistance',150);  
+%     [top_diffp_p,loc_diffp_p] = findpeaks(diffp);  % 拿到极值和索引值
+%     [top_diffp_v,loc_diffp_v] = findpeaks(-diffp);  
     en_top = interp1(loc_diffp_p,top_diffp_p,1:N,'spline');  % 三次样条插值，曲线更平滑
+    
+    loc_diffp_v = [1,loc_diffp_v];top_diffp_v = [-diffp(1),top_diffp_v];
     en_bottom = interp1(loc_diffp_v,-top_diffp_v,1:N,'spline');
 
     en_median = (en_top - (en_top - en_bottom)/2); 
@@ -58,8 +63,10 @@ function  [top_p, loc_p, top_v, loc_v, top_r, loc_r, direction, direc, diffp, en
         end
     end
     
-    top_diffp_seg([1,end]) = [];
-    loc_diffp_seg([1,end]) = [];  % 最适合找翻转点的区间
+    if ~isempty(loc_diffp_seg)
+        top_diffp_seg([1,end]) = [];
+        loc_diffp_seg([1,end]) = [];  % 最适合找翻转点的区间
+    end
     
     %% 取出翻转点，与上述方法相同！
     top_r = [];

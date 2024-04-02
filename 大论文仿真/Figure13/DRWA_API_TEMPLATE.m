@@ -142,6 +142,7 @@ plot(t,en_median,'Color','k','LineWidth',lineWidth);
     ylabel('Amp.(a.u.)')
     grid on;
 %   axis tight; % 设置坐标紧凑型
+    axis([0 0.03 -1.2 1.2]);  % 设置具体横坐标和纵坐标的范围[x1,x2,y1,y2]
     title('(c)', 'Units', 'normalized','FontWeight','bold','color', 'black', 'Position', z ,'FontSize', 16);
     set(gca,'YTickLabel',1*get(gca,'YTick'))  % 乘10^6，让图像的纵坐标显示的是微米量级
     if nargin - 3  == 3
@@ -157,6 +158,7 @@ plot(t,en_median,'Color','k','LineWidth',lineWidth);
     ylabel('Amp.(a.u.)')
     grid on;
 %   axis tight; % 设置坐标紧凑型
+    
     title('(d)', 'Units', 'normalized', 'FontWeight','bold','color', 'black','Position',z ,'FontSize', 16);
     set(gca,'YTickLabel',10^6*get(gca,'YTick'))  % 乘10^6，让图像的纵坐标显示的是微米量级
     if nargin - 3  == 4

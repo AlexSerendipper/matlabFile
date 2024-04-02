@@ -9,7 +9,8 @@ clear all;
 close all;
 
 %% 自混合信号
-C = 2;
+C = 0;
+c = C;
 fs = 200000;  % 采样率，即fs(s)采一个点。
 N = 4000; 
 fv = 100;  % 震动频
@@ -24,7 +25,7 @@ lambda = 650e-9;  % 波长
 figure(1);
 subplot(7,1,1);
 % path =  'D:\matlab save\smi_实验信号\experSignal\1_w_smooth_365424_15000';  % 1 文件路径
-path =  'D:\matlab save\smi_实验信号\experSignal\3_m_38332_5000';  % 1 文件路径
+path =  'D:\matlab save\smi_实验信号\experSignal_standard\3_m_38332_5000';  % 1 文件路径
 M = 38332; N = 15000;  [t, p, fs] = MOVE_API_EXPERIMENT(M, N, path);  % 1 加载.csv文件，从M点处开始取N个点
 p_init = p;
 % load('xxx.mat');  % 2. 加载.mat文件
@@ -90,8 +91,8 @@ title("diffp及其包络确定方向")
 
 
 %% 重构：PUM transform
-[phiF_reconstruct,Lt_reconstruct] = SMI_API_RECON_PUM(p,loc_p,loc_v,direction,N,lambda,c,alpha);
-% [phiF_wrapped,phiF_reconstruct,Lt_reconstruct] = SMI_API_RECON_HT(p,direction,N,lambda,1,1);
+% [phiF_reconstruct,Lt_reconstruct] = SMI_API_RECON_PUM(p,loc_p,loc_v,direction,N,lambda,c,alpha);
+[phiF_wrapped,phiF_reconstruct,Lt_reconstruct] = SMI_API_RECON_HT(p,direction,N,lambda,1,1);
 
 %% 
 % subplot(5, 1, 1);

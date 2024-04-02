@@ -93,7 +93,7 @@ function DRWA_API_TEMPLATE(varargin)
     end 
     %% 第1幅图
     axes('Position',[m1(1) m1(2) x y]);  axis tight;  % 设置图像位置 + 坐标紧凑型 
-    plot(t,p_ini2,'LineWidth',lineWidth);
+    plot(t,p_ini3,'LineWidth',lineWidth);
 
     % 横纵坐标轴+图框的粗细、大小、线宽
     set(gca,'LineWidth',lineWidth,'FontName',fontName,'FontWeight',fontWeight,'FontSize',fontSize);
@@ -130,11 +130,10 @@ function DRWA_API_TEMPLATE(varargin)
     %% 第3幅图
     axes('Position',[m3(1),0.332175,0.382000000000002,0.373842592592593]);  axis tight;
     
-    len = length(F);
-    TF = abs(TF);
-    mesh(T,F(len/2-875:len/2+875,:),TF(len/2-875:len/2+875,:));
-%     mesh(T,F,abs(TF));
-    view(0,90);
+%     len = length(F);
+%     TF = abs(TF);
+%     mesh(T,F(len/2-875:len/2+875,:),TF(len/2-875:len/2+875,:));
+%     view(0,90);
     % 横纵坐标轴+图框的粗细、大小、线宽
     set(gca,'LineWidth',lineWidth,'FontName',fontName,'FontWeight',fontWeight,'FontSize',fontSize);
 %     xlabel('Time(ms)')
@@ -196,7 +195,7 @@ function DRWA_API_TEMPLATE(varargin)
     plot(t,Lt,'LineWidth',lineWidth);
     hold on;
     plot(t,Lt_reconstruct,'color','#EDB120','LineStyle','--','LineWidth',lineWidth);
-%     legend("原信号","重构信号");
+    legend("参考信号","重构信号");
     
     % 横纵坐标轴+图框的粗细、大小、线宽
     set(gca,'LineWidth',lineWidth,'FontName',fontName,'FontWeight',fontWeight,'FontSize',fontSize);

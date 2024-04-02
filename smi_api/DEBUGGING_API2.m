@@ -18,6 +18,8 @@ alpha = 5;
 cut = 500;  % cut降采样，输入一个能被N整除的数，将N分为N/cut段  % 3
 % [t, lambda, L0, Lt, phi0, p] = MOVE_API_ALEATORY(fs, N, cut, C, alpha);  % 3 产生随机振动时，方向×负
 % [t, lambda, L0, Lt, phi0, p] = MOVE_API_ALEATORY_LOAD(fs, N, C, alpha);  % 4 加载储存好的随机振动，方向×负
+
+% [p,PS] = mapminmax(p,-1,1);  % 归一化函数
 plot(Lt);
 subplot(7,1,2);
 plot(p);

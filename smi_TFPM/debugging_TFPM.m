@@ -7,7 +7,7 @@ subplot(7,1,1);
 fs = 200000;  % 采样率，即1/fs(s)采一个点。
 N = 4000;  
 fv = 200;  % 震动频率
-C = [1.7];  % C设置一个从a到b变化的值
+C = [1.8];  % C设置一个从a到b变化的值
 c=C(1);
 alpha = 4;
 d = 1;  % 方向
@@ -32,13 +32,15 @@ V = 0.65; % 抑制因子
 [top_p, loc_p, top_v, loc_v, top_r, loc_r, direction] = SMI_API_FRINGE(p_init,N);  % 法1求方向，求的是初始信号的方向，所以都能用
 
 %% （去直流）
+p2 = p;
 subplot(7,1,2);
 % dc1有效
-% [p2] = SMI_API_ELIMINATE_DC1(p_init,direction,"time");
+[p2] = SMI_API_ELIMINATE_DC1(p_init,direction,"time");
+
 % [p2] = SMI_API_ELIMINATE_DC2(p_init,direction,"time");
 % [p1,p2] = SMI_API_evenlopEXTRACT_HT_PRO(p,N);
 
-% p = p2;
+p = p2;
 % plot(p2);
 % title("去直流后的自混合信号");
 

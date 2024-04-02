@@ -174,11 +174,11 @@ function DRWA_API_TEMPLATE(varargin)
     % 横纵坐标轴+图框的粗细、大小、线宽
     set(gca,'LineWidth',lineWidth,'FontName',fontName,'FontWeight',fontWeight,'FontSize',fontSize);
     xlabel('Time(ms)')
-    ylabel('Amp.(a.u)')
+    ylabel('Error(nm)')
     grid on;
 %     axis tight; 
     title('(f)', 'Units', 'normalized', 'FontWeight','bold','color', 'black','Position',z ,'FontSize', 16);
-    set(gca,'YTickLabel',10^6*get(gca,'YTick'))  % 乘10^6，让图像的纵坐标显示的是微米量级
+    set(gca,'YTickLabel',10^3*get(gca,'YTick'))  % 乘10^6，让图像的纵坐标显示的是微米量级
     if nargin - 3  == 4
         return;
     end
