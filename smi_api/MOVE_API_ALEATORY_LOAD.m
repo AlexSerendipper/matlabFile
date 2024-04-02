@@ -6,7 +6,7 @@ function [t, lambda, L0, Lt, phi0, p, c, phiF] = MOVE_API_ALEATORY_LOAD(fs, N, C
     t = (0:N-1)/fs;  % 采样时间，设N=10, fs=200，即采样了0.05s，t为[0...0.045]
     
     lambda = 650e-9;  % 波长
-    load('D:\matlab save\self-mixing\smi_api\DATA_LLT_ALEATORY_4000(1).mat'); 
+    load('D:\matlab save\self-mixing\smi_api\zy.mat'); 
     LLt = SMI_API_RESAMPLE(LLt,N);
     
     L0 = 20 * lambda;  % 外腔距离（✔） 

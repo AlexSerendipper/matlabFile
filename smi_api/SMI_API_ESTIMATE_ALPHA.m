@@ -1,6 +1,5 @@
 %% 输入p，实现C和alpha的估计（基于驼峰区的值），这个方法仅适用于适度反馈，在C大于2时表现良好
 %  在C值的估计上会引入0.0几的误差，而传统算法不会引入误差。在C大于2时alpha引入的误差小于0.1而传统算法误差大于0.5。所以该算法优势在于在C值较大时对alpha的估计。
-
 function [C_reconstruct, alpha_reconstruct] = SMI_API_ESTIMATE_ALPHA(direction,loc_v,loc_p,top_v,top_p)  
     direction_seg1 = [];
     for i = 1:length(direction)-1

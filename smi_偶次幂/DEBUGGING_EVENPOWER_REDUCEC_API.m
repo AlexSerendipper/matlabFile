@@ -9,12 +9,12 @@
 clc;
 clear all;
 close all;
-C = 1.5;
+C = 0.1;
 fs = 200000;  % 采样率，即fs(s)采一个点。
 N = 4000;  
 fv = 100;  % 震动频
 alpha = 5;
-n = -1;  % 翻倍次数，-2不变，-1翻一倍
+n = 0;  % 翻倍次数，-2不变，-1翻一倍
 
 %% 自混合信号
 [t, lambda, L0, Lt, phi0, phiF, p, c] = MOVE_API_HARMONIC(fs, N, fv, C, alpha);
@@ -27,7 +27,8 @@ times=2^(n+2);
 
 p_double = p;
 plot(p_init);
-hold on;
+subplot(7,1,2);
+plot(p_double);
 %% 找到所有的峰谷值（理论上包含跳变点）
 [top_p,loc_p] = findpeaks(p);  % 找到所有大于0.1的峰值,这是因为驼峰区乱七八糟（当然这只针对该实验信号）
 [top_v,loc_v] = findpeaks(-p);  % 默认。 'minpeakheight',0.1, 'minpeakdistance',50

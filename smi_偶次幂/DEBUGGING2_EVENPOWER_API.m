@@ -13,7 +13,7 @@ fs = 200000;  % 采样率，即fs(s)采一个点。
 N = 4000;  
 fv = 100;  % 震动频
 alpha = 5;
-n = -2;  % 翻倍次数，-2不变，-1翻一倍
+n = -1;  % 翻倍次数，-2不变，-1翻一倍
 
 %% 自混合信号
 [t, lambda, L0, Lt, phi0, p, c] = MOVE_API_HARMONIC(fs, N, fv, C, alpha);
