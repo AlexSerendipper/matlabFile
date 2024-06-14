@@ -5,7 +5,10 @@ function loc_ = SMI_API_RESAMPLE(loc,int_)   % 输入信号为loc,重采样为in
     % 将原信号重采样为原来的int_倍
     loc_ = interp1(1:int_:int_* N,loc,1:int_* N,'spline');
     % 再将信号降采样为原来的N倍，即 N * 1000 / N， 故最后信号长度为int_
-    loc_ = loc_(1:N:length(loc_));
+    temp = 0:N:length(loc_);
+    temp(1) = 1;
+    loc_ = interp1(1:length(loc_),loc_,temp,'spline');
+    % loc_ = loc_(1:N:length(loc_));
 end
 
 

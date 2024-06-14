@@ -16,11 +16,11 @@ fs = 100000;  % 采样率100000
 N = 8000;  
 fv = 30;  % 震动频
 alpha = 5;
-dir = -1; % 方向
-C = [2]; 
+dir = 1; % 方向
+C = [1.7]; 
 % h = 3.355; % 调制深度（随机振动）
-h = 100;
-fm = 25000;  % 调制频率10000
+h = 3.355;
+fm = 10000;  % 调制频率10000
 gamma = 0;  % 调制初相位
 beta = 1;
 windowLength = 500; % 窗长
@@ -55,8 +55,8 @@ title("平移后频域信号（未更改频域范围）");
 f2N = @(x) N/fs * x + 1;  % 映射了从频域到N的对应关系
 
 %% 在频域上进行去直流的工作（去除一次、二次、三次谐波）
-% p_([f2N(fm),f2N(2*fm),f2N(3*fm),f2N(4*fm)])=0;
-% p_([f2N(fs-fm),f2N(fs-2*fm),f2N(fs-3*fm),f2N(fs-4*fm)])=0;
+p_([f2N(fm),f2N(2*fm),f2N(3*fm),f2N(4*fm)])=0;
+p_([f2N(fs-fm),f2N(fs-2*fm),f2N(fs-3*fm),f2N(fs-4*fm)])=0;
 
 % p_([f2N(1*fm),f2N(3*fm)])=0;
 % p_([f2N(fs-1*fm),f2N(fs-3*fm)])=0;
@@ -186,7 +186,7 @@ Lt_reconstruct = sgolayfilt(Lt_reconstruct,3,31);
 plot(Lt,'k');
 hold on;
 % Lt_reconstruct = Lt_reconstruct - mean(Lt_reconstruct); % 简写振动和余弦调制振动，重构后加上幅值A
-Lt_reconstruct = Lt_reconstruct - 1.5 * lambda;  % 重构后的随机振动信号要加上幅值1.5的波长，这是为啥我页不知道
+% Lt_reconstruct = Lt_reconstruct - 1.5 * lambda;  % 重构后的随机振动信号要加上幅值1.5的波长，这是为啥我页不知道
 plot(Lt_reconstruct,'r')
 title(['解包裹重构后的信号，C-reconstruct=', num2str(C)]);
 

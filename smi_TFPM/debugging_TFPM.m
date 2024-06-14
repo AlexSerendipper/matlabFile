@@ -7,7 +7,7 @@ subplot(7,1,1);
 fs = 200000;  % 采样率，即1/fs(s)采一个点。
 N = 4000;  
 fv = 200;  % 震动频率
-C = [1.8];  % C设置一个从a到b变化的值
+C = [1.7];  % C设置一个从a到b变化的值
 c=C(1);
 alpha = 4;
 d = 1;  % 方向
@@ -74,7 +74,7 @@ subplot(4,2,[1,2,3.4]);
 % p = imag(hilbert(p));
 [T,F,TF,TF_curb,p] = SMI_API_TFPM(p,N,fs,windowLength,V);
 mesh(abs(TF)); set(gca,'YTickLabel',[]); ylabel('Frq.', 'FontSize',7,'FontWeight','bold' ); 
-colormap jet;
+% colormap jet;
 % colormap Cold; 
 view(0,90); % 设置初始视角为俯视角
 title('抑制前');

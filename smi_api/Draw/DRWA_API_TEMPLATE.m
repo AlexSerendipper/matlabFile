@@ -92,6 +92,20 @@ function DRWA_API_TEMPLATE(varargin)
         m7 = cell2mat(varargin(10));
         m8 = cell2mat(varargin(11));
     end 
+    if length(varargin)-3 == 9
+        x = varargin{1} ;  % 大小
+        y = varargin{2};  % 大小
+        z = varargin{3}; % 角标位置        
+        m1 = cell2mat(varargin(4));
+        m2 = cell2mat(varargin(5));
+        m3 = cell2mat(varargin(6));
+        m4 = cell2mat(varargin(7));
+        m5 = cell2mat(varargin(8));
+        m6 = cell2mat(varargin(9));
+        m7 = cell2mat(varargin(10));
+        m8 = cell2mat(varargin(11));
+        m9 = cell2mat(varargin(12));
+    end 
     if length(varargin)-3 == 10
         x = varargin{1} ;  % 大小
         y = varargin{2};  % 大小
@@ -243,7 +257,7 @@ function DRWA_API_TEMPLATE(varargin)
 %   axis tight; % 设置坐标紧凑型
     title('(i)', 'Units', 'normalized', 'FontWeight','bold','color', 'black', 'Position', z ,'FontSize', 16);
     set(gca,'YTickLabel',10^6*get(gca,'YTick'))  % 乘10^6，让图像的纵坐标显示的是微米量级
-    if nargin - 3  == 8
+    if nargin - 3  == 9
         return;
     end
     %% 第10幅图
@@ -258,7 +272,7 @@ function DRWA_API_TEMPLATE(varargin)
 %   axis tight; % 设置坐标紧凑型
     title('(j)', 'Units', 'normalized', 'FontWeight','bold','color', 'black', 'Position', z ,'FontSize', 16);
     set(gca,'YTickLabel',10^6*get(gca,'YTick'))  % 乘10^6，让图像的纵坐标显示的是微米量级
-    if nargin - 3  == 8
+    if nargin - 3  == 10
         return;
     end
 end

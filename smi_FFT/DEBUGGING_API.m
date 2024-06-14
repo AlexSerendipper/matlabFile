@@ -1,5 +1,4 @@
-%% 该程序用于调试，其实也是非常好用且重要的
-% zabit2021 IEEEsensorjournal，频域位移重构仿真
+%% zabit2021 IEEEsensorjournal，频域位移重构仿真
 
 %% 全局变量
 clc;

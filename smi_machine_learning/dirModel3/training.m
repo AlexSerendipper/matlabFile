@@ -2,7 +2,7 @@ clear
 clc
 
 %% 构造数据集
-load 'D:\zzj\matlabData\dirModel3_small_data_noDC.mat';
+load 'D:\matlab save\self-mixing\smi_machine_learning\dirModel3\dirModel3_small_data_noDC.mat';
 X = fringeData';  % 数据集的输入
 inputDim = 4;  % 输入维度(没用)
 outputDim = 3;  % 输出维度Y（没用）

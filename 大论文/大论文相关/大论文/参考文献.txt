@@ -1,0 +1,15 @@
+【LK】：
+Lang R, Kobayashi K. External optical feedback effects on semiconductor injection laser properties[J]. IEEE Journal of Quantum Electronics,1980,16(3):347-355.
+【FP】
+Groot P J D, Gallatin G M , Macomber S H . Ranging and velocimetry signal generation in a backscatter-modulated laser diode[J].Applied Optics,1988,27(21):4475-4480.
+【旋转矢量叠加理论】
+Donati S. Electro-optical instrumentation: sensing and measuring with lasers [M]. Pearson Education, 2004.
+【引入线宽展宽因子的定义】
+M. Osinski, J. Buus. Linewidth broadening factor in semiconductor lasers--An overview [J]. IEEE Journal of Quantum Electronics, 1987, 23(1): 9-29.
+【自混合信号源（不规范）】
+Solving self-mixing equations for arbitrary feedback levels: a concise algorithm
+【通过改变光路结构，在信号获取端直接得到具有高精度条纹的信号】
+Wang L, Luo X, Wang X L, et al. Obtaining high fringe precision in self-mixing interference using a simple external reflecting mirror [J]. IEEE Photonics Journal, 2013, 5(3): 1-8.
+Zeng Z, Qu X, Tan Y, et al. High-accuracy self-mixing interferometer based on single high-order orthogonally polarized feedback effects [J]. Optics Express, 2015, 23(13): 16977-16983.
+【PUM】
+A displacement reconstruction algorithm used for optical feedback self mixing interferometry system under different feedback levels
